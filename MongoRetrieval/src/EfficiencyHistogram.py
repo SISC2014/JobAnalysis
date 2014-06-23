@@ -177,10 +177,6 @@ def dbFindItemFromUser(item, username, cluster, site, coll):
                 cr = None
 
     pr = { item: 1, '_id': 0 }
-    
-    
-    #site = "\\" + site + "\\"
-    ugh = { 'LastRemoteHost': { rgx: "phys.uconn.edu"} }
         
     for condor_history in coll.find(cr, pr):
         mylist.append(condor_history)
@@ -231,8 +227,6 @@ def main(host, port):
     db = client.condor_history
     coll = db.history_records
     
-    test2 = dbFindItemFromUser("LastRemoteHost", None, None, "phys.uconn.edu", coll)
-
     efficiencyHistogram(None, None, "phys.uconn.edu", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of phys.uconn.edu")
     #efficiencyHistogram("lfzhao@login01.osgconnect.net", None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
     
