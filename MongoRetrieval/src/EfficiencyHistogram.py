@@ -130,7 +130,7 @@ import re
 import pymongo
 from pymongo import MongoClient
 
-#takes a list of dictionaries and returns a list of strings
+#takes a list of dictionaries and returns a list of floats
 def parseList(l):       
     l = map(str, l)
             
@@ -143,8 +143,9 @@ def parseList(l):
     return list(newlist)
 
 #returns a list of dictionaries 
-#item is from list of keys, username: example@login01.osgconnect.net, cluster: 123456, coll: MongoDB collection
-#either username OR cluster can be None, in which case it is not used
+#item is from list of keys, username: "example@login01.osgconnect.net", cluster: "123456", site: "phys.ucconn.edu", 
+#coll: MongoDB collection
+#two of username/cluster/site can be None, in which case they will not be in the query
 #item cannot be _id
 def dbFindItemFromUser(item, username, cluster, site, coll):
     mylist = []
@@ -216,6 +217,7 @@ def plotHist(l, bs, xlab, ylab, title):
     plt.ylabel(ylab)
     plt.show()
     
+#Given at least one input for username/cluster/site, creates a histogram of the RemoteUserCpu/RemoteWallClockTime for the results
 def efficiencyHistogram(username, cluster, site, coll, bins, xlab, ylab, title):
     ruc = parseList(dbFindItemFromUser("RemoteUserCpu", username, cluster, site, coll))
     rwct = parseList(dbFindItemFromUser("RemoteWallClockTime", username, cluster, site, coll))
