@@ -217,15 +217,14 @@ def plotHist(l, bs, xlab, ylab, title):
     plt.ylabel(ylab)
     plt.show()
     
-#Given at least one input for username/cluster/site, creates a histogram of the RemoteUserCpu/RemoteWallClockTime for the results
-def efficiencyHistogram(username, cluster, site, coll, bins, xlab, ylab, title):
+def getEfficiency(username, cluster, site, coll):
     ruc = parseList(dbFindItemFromUser("RemoteUserCpu", username, cluster, site, coll))
     rwct = parseList(dbFindItemFromUser("RemoteWallClockTime", username, cluster, site, coll))
     
     efflist = []
     totcount = 0
-    goodcount = 0
-    zerocount = 0
+    goodcount = 0 #certain efficiency values are >1 due to a condor error. these values are discarded
+    zerocount = 0 #testing possible condor bug
     
     for x,y in zip(ruc, rwct):
         if(y == 0):
@@ -238,20 +237,52 @@ def efficiencyHistogram(username, cluster, site, coll, bins, xlab, ylab, title):
             efflist.append(x/y)
             totcount += 1
             goodcount +=1
-            
-    print("Jobs Plotted:", goodcount, "/", totcount)
-    plotHist(efflist, bins, xlab, ylab, title)
+                
+    return [efflist, goodcount, totcount]
+    
+#Given at least one input for username/cluster/site, creates a histogram of the RemoteUserCpu/RemoteWallClockTime for the results
+def efficiencyHistogram(username, cluster, site, coll, bins, xlab, ylab, title):
+    retlist = getEfficiency(username, cluster, site, coll) #0: efflist, 1: goodcount, 2: totcount
+    
+    print("Jobs Plotted:", retlist[1], "/", retlist[2])
+    plotHist(retlist[0], bins, xlab, ylab, title)
+    
+def fourEffHists(lst1, lst2, lst3, lst4, lab1, lab2, lab3, lab4, bs, xlab, ylab, title):
+    colors = ['b', 'r', 'g', 'y']
+    
+    plt.hist(lst1, bins=bs, histtype='stepfilled', label=lab1)
+    plt.hist(lst2, bins=bs, histtype='stepfilled', label=lab2)
+    plt.hist(lst3, bins=bs, histtype='stepfilled', label=lab3)
+    plt.hist(lst4, bins=bs, histtype='stepfilled', label=lab4)
+    plt.title(title)
+    plt.xlabel(xlab)
+    plt.ylabel(ylab)
+    plt.legend()
+    plt.show()
     
 def main(host, port):
     client = MongoClient(host, port)
     db = client.condor_history
     coll = db.history_records
     
+    str_uc = "uc.mwt2.org"
+    str_uconn = "phys.uconn.edu"
+    str_smu = "hpc.smu.edu"
+    str_bnl = "usatlas.bnl.gov"
+    
+    #lst1 = getEfficiency(None, None, str_uc, coll)
+    #lst2 = getEfficiency(None, None, str_uconn, coll)
+    #lst3 = getEfficiency(None, None, str_smu, coll)
+    #lst4 = getEfficiency(None, None, str_bnl, coll)
+    
+    #doesn't work very well cause of large range of data
+    #fourEffHists(lst1,lst2,lst3,lst4, str_uc, str_uconn, str_smu, str_bnl, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for Four Sites")
+    
     efficiencyHistogram(None, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for All Jobs (95,251 jobs)")
-    #efficiencyHistogram(None, None, "uc.mwt2.org", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for uc.mwt2.org")
-    #efficiencyHistogram(None, None, "phys.uconn.edu", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for phys.uconn.edu")
-    #efficiencyHistogram(None, None, "hpc.smu.edu", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for hpc.smu.edu")
-    #efficiencyHistogram(None, None, "usatlas.bnl.gov", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for usatlas.bnl.gov")
-    #efficiencyHistogram("lfzhao@login01.osgconnect.net", None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
+    efficiencyHistogram(None, None, str_uc, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for uc.mwt2.org")
+    efficiencyHistogram(None, None, str_uconn, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for phys.uconn.edu")
+    efficiencyHistogram(None, None, str_smu, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for hpc.smu.edu")
+    efficiencyHistogram(None, None, str_bnl, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for usatlas.bnl.gov")
+    efficiencyHistogram("lfzhao@login01.osgconnect.net", None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
     
 main('mc.mwt2.org', 27017)
