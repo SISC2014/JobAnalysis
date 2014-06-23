@@ -144,24 +144,44 @@ def parseList(l):
 
 #returns a list of dictionaries 
 #item is from list of keys, username: example@login01.osgconnect.net, cluster: 123456, coll: MongoDB collection
-def dbFindItemFromUser(item, username, cluster, coll):
-    client = MongoClient('mc.mwt2.org', 27017)
-    db = client.condor_history
-    coll = db.history_records
-
+#either username OR cluster can be None, in which case it is not used
+#item cannot be _id
+def dbFindItemFromUser(item, username, cluster, site, coll):
     mylist = []
+    rgx = "$regex"
     
     if(username != None):
         username = '\"' + username + '\"'
+    
+    if(username != None):
         if(cluster != None):
-            cr = { 'User': username, 'ClusterId': cluster }
+            if(site != None):
+                cr = { 'User': username, 'ClusterId': cluster, 'LastRemoteHost': { rgx: site }}
+            else:
+                cr = { 'User': username, 'ClusterId': cluster }
         else:
-            cr = { 'User': username }
-    elif(cluster != None):
-        cr = { 'ClusterId': cluster }
+            if(site != None):
+                cr = { 'User': username, 'LastRemoteHost': { rgx: site } }
+            else:
+                cr = { 'User': username }
+    else:
+        if(cluster != None):
+            if(site != None):
+                cr = { 'ClusterId': cluster, 'LastRemoteHost': { rgx: site } }
+            else:
+                cr = { 'ClusterId': cluster }
+        else:
+            if(site != None):
+                cr = { 'LastRemoteHost': { rgx: site } }
+            else:
+                cr = None
 
     pr = { item: 1, '_id': 0 }
     
+    
+    #site = "\\" + site + "\\"
+    ugh = { 'LastRemoteHost': { rgx: "phys.uconn.edu"} }
+        
     for condor_history in coll.find(cr, pr):
         mylist.append(condor_history)
     
@@ -181,8 +201,10 @@ def dbFindIdFromUser(username, coll):
     
     return mylist
 
-#creates a scatterplot of two lists
-def plotScatter(lst1, lst2, xlab, ylab, title):
+#creates a scatterplot of two items
+def plotScatter(item1, item2, username, cluster, coll, xlab, ylab, title):
+    lst1 = parseList(dbFindItemFromUser(item1, username, cluster, coll))
+    lst2 = parseList(dbFindItemFromUser(item2, username, cluster, coll))
     plt.plot(lst1, lst2, 'bo')
     plt.xlabel(xlab)
     plt.ylabel(ylab)
@@ -198,22 +220,20 @@ def plotHist(l, bs, xlab, ylab, title):
     plt.ylabel(ylab)
     plt.show()
     
+def efficiencyHistogram(username, cluster, site, coll, bins, xlab, ylab, title):
+    ruc = parseList(dbFindItemFromUser("RemoteUserCpu", username, cluster, site, coll))
+    rwct = parseList(dbFindItemFromUser("RemoteWallClockTime", username, cluster, site, coll))
+    efflist = [x/(y+0.000001) for x,y in zip (ruc, rwct)] #+.0000001 so no divideByZero error
+    plotHist(efflist, bins, xlab, ylab, title)
+    
 def main(host, port):
     client = MongoClient(host, port)
     db = client.condor_history
     coll = db.history_records
     
-    ruc = parseList(dbFindItemFromUser("RemoteUserCpu", "lfzhao@login01.osgconnect.net", None, coll))
-    rwct = parseList(dbFindItemFromUser("RemoteWallClockTime", "lfzhao@login01.osgconnect.net", None, coll))
-    cid = parseList(dbFindIdFromUser("lfzhao@login01.osgconnect.net", coll))
-    efflist = [x/(y+0.000001) for x,y in zip (ruc, rwct)] #+.0000001 so no divideByZero error
-    
-    ruc225926 = parseList(dbFindItemFromUser("RemoteUserCpu", "lfzhao@login01.osgconnect.net", "225926", coll))
-    rwct225926 = parseList(dbFindItemFromUser("RemoteWallClockTime", "lfzhao@login01.osgconnect.net", "25926", coll))
-    el225926 = [x/(y) for x,y in zip (ruc225926, rwct225926)]
-    #plotHist(el225926, 50, "UserCPU/WallClockTime", "Frequency", "Efficiencies of Jobs for Cluster 225926")
+    test2 = dbFindItemFromUser("LastRemoteHost", None, None, "phys.uconn.edu", coll)
 
-    #plotScatter(cid, efflist, "Job", "Efficiency", "Efficiency of Each Job")
-    #plotHist(efflist, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of Jobs (42,000 total)")
+    efficiencyHistogram(None, None, "phys.uconn.edu", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of phys.uconn.edu")
+    #efficiencyHistogram("lfzhao@login01.osgconnect.net", None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
     
 main('mc.mwt2.org', 27017)
