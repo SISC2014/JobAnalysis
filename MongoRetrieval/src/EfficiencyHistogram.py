@@ -221,7 +221,25 @@ def plotHist(l, bs, xlab, ylab, title):
 def efficiencyHistogram(username, cluster, site, coll, bins, xlab, ylab, title):
     ruc = parseList(dbFindItemFromUser("RemoteUserCpu", username, cluster, site, coll))
     rwct = parseList(dbFindItemFromUser("RemoteWallClockTime", username, cluster, site, coll))
-    efflist = [x/(y+0.000001) for x,y in zip (ruc, rwct)] #+.0000001 so no divideByZero error
+    
+    efflist = []
+    totcount = 0
+    goodcount = 0
+    zerocount = 0
+    
+    for x,y in zip(ruc, rwct):
+        if(y == 0):
+            totcount += 1
+        elif(x/y > 1):
+            totcount += 1
+        else:
+            if(x == 0):
+                zerocount +=1
+            efflist.append(x/y)
+            totcount += 1
+            goodcount +=1
+            
+    print("Jobs Plotted:", goodcount, "/", totcount)
     plotHist(efflist, bins, xlab, ylab, title)
     
 def main(host, port):
@@ -229,7 +247,11 @@ def main(host, port):
     db = client.condor_history
     coll = db.history_records
     
-    efficiencyHistogram(None, None, "phys.uconn.edu", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of phys.uconn.edu")
+    efficiencyHistogram(None, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for All Jobs (95,251 jobs)")
+    #efficiencyHistogram(None, None, "uc.mwt2.org", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for uc.mwt2.org")
+    #efficiencyHistogram(None, None, "phys.uconn.edu", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for phys.uconn.edu")
+    #efficiencyHistogram(None, None, "hpc.smu.edu", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for hpc.smu.edu")
+    #efficiencyHistogram(None, None, "usatlas.bnl.gov", coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for usatlas.bnl.gov")
     #efficiencyHistogram("lfzhao@login01.osgconnect.net", None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
     
 main('mc.mwt2.org', 27017)
