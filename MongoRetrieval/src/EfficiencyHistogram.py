@@ -153,33 +153,26 @@ def dbFindItemFromUser(item, username, cluster, site, coll):
     
     if(username != None):
         username = '\"' + username + '\"'
-    
-    if(username != None):
-        if(cluster != None):
-            if(site != None):
-                cr = { 'User': username, 'ClusterId': cluster, 'LastRemoteHost': { rgx: site }}
-            else:
-                cr = { 'User': username, 'ClusterId': cluster }
-        else:
-            if(site != None):
-                cr = { 'User': username, 'LastRemoteHost': { rgx: site } }
-            else:
-                cr = { 'User': username }
+        dicU = {'User': username }
     else:
-        if(cluster != None):
-            if(site != None):
-                cr = { 'ClusterId': cluster, 'LastRemoteHost': { rgx: site } }
-            else:
-                cr = { 'ClusterId': cluster }
-        else:
-            if(site != None):
-                cr = { 'LastRemoteHost': { rgx: site } }
-            else:
-                cr = None
+        dicU = {}
+        
+    if(cluster != None):
+        dicC = { 'ClusterId': cluster }
+    else:
+        dicC = {}
+        
+    if(site != None):
+        dicS = { 'LastRemoteHost': { rgx: site } }
+    else:
+        dicS = {}
+        
+    dicU.update(dicC)
+    dicU.update(dicS)
 
     pr = { item: 1, '_id': 0 }
         
-    for condor_history in coll.find(cr, pr):
+    for condor_history in coll.find(dicU, pr):
         mylist.append(condor_history)
     
     return mylist    
@@ -224,7 +217,7 @@ def getEfficiency(username, cluster, site, coll):
     efflist = []
     totcount = 0
     goodcount = 0 #certain efficiency values are >1 due to a condor error. these values are discarded
-    zerocount = 0 #testing possible condor bug
+    zerocount = 0 #testing possible condor bug where RemoteUserCpu is 0 but RemoteWallClockTime is quite large
     
     for x,y in zip(ruc, rwct):
         if(y == 0):
@@ -248,8 +241,6 @@ def efficiencyHistogram(username, cluster, site, coll, bins, xlab, ylab, title):
     plotHist(retlist[0], bins, xlab, ylab, title)
     
 def fourEffHists(lst1, lst2, lst3, lst4, lab1, lab2, lab3, lab4, bs, xlab, ylab, title):
-    colors = ['b', 'r', 'g', 'y']
-    
     plt.hist(lst1, bins=bs, histtype='stepfilled', label=lab1)
     plt.hist(lst2, bins=bs, histtype='stepfilled', label=lab2)
     plt.hist(lst3, bins=bs, histtype='stepfilled', label=lab3)
@@ -275,7 +266,7 @@ def main(host, port):
     #lst3 = getEfficiency(None, None, str_smu, coll)
     #lst4 = getEfficiency(None, None, str_bnl, coll)
     
-    #doesn't work very well cause of large range of data
+    #doesn't look very good cause of large range of data
     #fourEffHists(lst1,lst2,lst3,lst4, str_uc, str_uconn, str_smu, str_bnl, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for Four Sites")
     
     efficiencyHistogram(None, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for All Jobs (95,251 jobs)")
