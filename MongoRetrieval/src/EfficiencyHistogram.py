@@ -251,7 +251,7 @@ def fourEffHists(lst1, lst2, lst3, lst4, lab1, lab2, lab3, lab4, bs, xlab, ylab,
     plt.legend()
     plt.show()
     
-def main(host, port):
+def mainEH(host, port):
     client = MongoClient(host, port)
     db = client.condor_history
     coll = db.history_records
@@ -260,6 +260,7 @@ def main(host, port):
     str_uconn = "phys.uconn.edu"
     str_smu = "hpc.smu.edu"
     str_bnl = "usatlas.bnl.gov"
+    str_lfz = "lfzhao@login01.osgconnect.net"
     
     #lst1 = getEfficiency(None, None, str_uc, coll)
     #lst2 = getEfficiency(None, None, str_uconn, coll)
@@ -269,11 +270,11 @@ def main(host, port):
     #doesn't look very good cause of large range of data
     #fourEffHists(lst1,lst2,lst3,lst4, str_uc, str_uconn, str_smu, str_bnl, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for Four Sites")
     
-    efficiencyHistogram(None, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for All Jobs (95,251 jobs)")
-    efficiencyHistogram(None, None, str_uc, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for uc.mwt2.org")
-    efficiencyHistogram(None, None, str_uconn, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for phys.uconn.edu")
-    efficiencyHistogram(None, None, str_smu, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for hpc.smu.edu")
-    efficiencyHistogram(None, None, str_bnl, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for usatlas.bnl.gov")
-    efficiencyHistogram("lfzhao@login01.osgconnect.net", None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
-    
-main('mc.mwt2.org', 27017)
+    #efficiencyHistogram(None, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for All Jobs (95,251 jobs)")
+    #efficiencyHistogram(None, None, str_uc, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for uc.mwt2.org")
+    #efficiencyHistogram(None, None, str_uconn, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for phys.uconn.edu")
+    #efficiencyHistogram(None, None, str_smu, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for hpc.smu.edu")
+    #efficiencyHistogram(None, None, str_bnl, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for usatlas.bnl.gov")
+    #efficiencyHistogram(str_lfz, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
+        
+mainEH('mc.mwt2.org', 27017)
