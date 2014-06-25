@@ -5,7 +5,10 @@ Created on Jun 24, 2014
 '''
 
 import json
-from EfficiencyHistogram import *
+from pylab import *
+from numpy import *
+from pymongo import MongoClient
+from EfficiencyHistogram import dbFindItemFromUser, parseList
 
 def plotStuff(vals, heights):
     
@@ -19,16 +22,18 @@ def plotStuff(vals, heights):
     plt.xticks(num_vals, vals)
     plt.show()
 
-def mainJSON(host, port):
+def mainJSON(host, port, readfile, writefile):
     client = MongoClient(host, port)
     db = client.condor_history
     coll = db.history_records
     
     data = [ {} ]
     
-    site_list = ["ucdavis.edu", "bnl.gov", "smu.edu", "local", "tier2", "unl.edu", "aglt2.org", "iu.edu", "purdue.edu", "uc.mwt2.org", 
-                 "northwestern.edu", "nd.edu", "wisc.edu", "buffalo.edu"]
-    days_list = []
+    f = open(readfile, 'r')
+    try:
+        site_list = f.read().splitlines()
+    finally:
+        f.close()
     
     for site in site_list:
         time_list = parseList(dbFindItemFromUser("RemoteWallClockTime", None, None, site, coll))
@@ -36,12 +41,15 @@ def mainJSON(host, port):
         for e in time_list:
             tot += e
         days = tot / 60 / 60 / 24
-        days_list.append(days)
         dic = {site: days}
         data[0].update(dic)
-        
-    plotStuff(site_list, days_list)
     
-    return(json.dumps(data))
+    plotStuff(list(data[0].keys()), list(data[0].values()))
     
-mainJSON('mc.mwt2.org', 27017)
+#     f = open(writefile, 'w')
+#     try:
+#         json.dump(data, f)
+#     finally:
+#         f.close()
+    
+mainJSON('mc.mwt2.org', 27017, 'ListOfSites.txt', 'data.json')

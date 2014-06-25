@@ -1,0 +1,14 @@
+ucdavis.edu
+bnl.gov
+smu.edu
+local
+tier2
+unl.edu
+aglt2.org
+iu.edu
+purdue.edu
+uc.mwt2.org
+northwestern.edu
+nd.edu
+wisc.edu
+buffalo.edu

@@ -120,14 +120,10 @@ In
 JobNotification
 '''
 
-
-from array import *
 from pylab import *
 from numpy import *
-import string
 import re
 
-import pymongo
 from pymongo import MongoClient
 
 #takes a list of dictionaries and returns a list of floats
