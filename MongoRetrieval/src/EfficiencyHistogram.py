@@ -141,8 +141,8 @@ def parseList(l):
 #returns a list of dictionaries 
 #item is from list of keys, username: "example@login01.osgconnect.net", cluster: "123456", site: "phys.ucconn.edu", 
 #coll: MongoDB collection
-#two of username/cluster/site can be None, in which case they will not be in the query
-#item cannot be _id
+#username/cluster/site may be None, in which case they will not be used
+#item should be _id
 def dbFindItemFromUser(item, username, cluster, site, coll):
     mylist = []
     rgx = "$regex"
@@ -270,7 +270,7 @@ def mainEH(host, port):
     #efficiencyHistogram(None, None, str_uc, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for uc.mwt2.org")
     #efficiencyHistogram(None, None, str_uconn, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for phys.uconn.edu")
     #efficiencyHistogram(None, None, str_smu, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for hpc.smu.edu")
-    #efficiencyHistogram(None, None, str_bnl, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for usatlas.bnl.gov")
+    efficiencyHistogram(None, None, str_bnl, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for usatlas.bnl.gov")
     #efficiencyHistogram(str_lfz, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
         
 mainEH('mc.mwt2.org', 27017)

@@ -46,10 +46,10 @@ def mainJSON(host, port, readfile, writefile):
     
     plotStuff(list(data[0].keys()), list(data[0].values()))
     
-#     f = open(writefile, 'w')
-#     try:
-#         json.dump(data, f)
-#     finally:
-#         f.close()
+    f = open(writefile, 'w')
+    try:
+        json.dump(data, f)
+    finally:
+        f.close()
     
 mainJSON('mc.mwt2.org', 27017, 'ListOfSites.txt', 'data.json')
