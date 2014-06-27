@@ -5,8 +5,7 @@ Created on Jun 24, 2014
 '''
 
 import json
-from pylab import *
-from numpy import *
+import matplotlib.pyplot as plt
 from pymongo import MongoClient
 from EfficiencyHistogram import dbFindItemFromUser, parseList
 

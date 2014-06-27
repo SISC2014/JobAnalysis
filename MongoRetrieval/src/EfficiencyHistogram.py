@@ -120,10 +120,8 @@ In
 JobNotification
 '''
 
-from pylab import *
-from numpy import *
 import re
-
+import matplotlib.pyplot as plt
 from pymongo import MongoClient
 
 #takes a list of dictionaries and returns a list of floats
@@ -252,25 +250,10 @@ def mainEH(host, port):
     db = client.condor_history
     coll = db.history_records
     
-    str_uc = "uc.mwt2.org"
-    str_uconn = "phys.uconn.edu"
-    str_smu = "hpc.smu.edu"
-    str_bnl = "usatlas.bnl.gov"
-    str_lfz = "lfzhao@login01.osgconnect.net"
+    #sites: uc.mwt2.org, phys.uconn.edu, hpc.smu.edu, usatlas.bnl.gov
+    #names (@login01.osgconnect.net): lfzhao, sthapa, echism, wcatino, bamitchell
+    str_name = "bamitchell@login01.osgconnect.net"
     
-    #lst1 = getEfficiency(None, None, str_uc, coll)
-    #lst2 = getEfficiency(None, None, str_uconn, coll)
-    #lst3 = getEfficiency(None, None, str_smu, coll)
-    #lst4 = getEfficiency(None, None, str_bnl, coll)
-    
-    #doesn't look very good cause of large range of data
-    #fourEffHists(lst1,lst2,lst3,lst4, str_uc, str_uconn, str_smu, str_bnl, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for Four Sites")
-    
-    #efficiencyHistogram(None, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for All Jobs (95,251 jobs)")
-    #efficiencyHistogram(None, None, str_uc, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for uc.mwt2.org")
-    #efficiencyHistogram(None, None, str_uconn, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for phys.uconn.edu")
-    #efficiencyHistogram(None, None, str_smu, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for hpc.smu.edu")
-    efficiencyHistogram(None, None, str_bnl, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies for usatlas.bnl.gov")
-    #efficiencyHistogram(str_lfz, None, None, coll, 100, "UserCPU/WallClockTime", "Frequency", "Efficiencies of lfzhao")
-        
+    efficiencyHistogram(str_name, None, None, coll, 75, "UserCPU/WallClockTime", "Frequency", "Efficiencies for " + str_name)
+                
 mainEH('mc.mwt2.org', 27017)
