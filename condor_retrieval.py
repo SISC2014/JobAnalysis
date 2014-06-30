@@ -2,6 +2,8 @@
 # Polls a Condor collector for some data and outputs it to Mongo
 # collectors: osg-flock.grid.iu.edu, uc3-mgt.mwt2.org, appcloud.uchicago.edu
 # Takes ~3 seconds each time
+# Problems: 1 wait time for all 3 collectors, would be better to have a longer wait time for osg-flock,
+#           implementation of futures may not be correct so this would not be faster than no concurrent version
 
 
 import sys, time, argparse
