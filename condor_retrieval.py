@@ -1,10 +1,7 @@
 # Erik Halperin, 6/26/14
 # Polls a Condor collector for some data and outputs it to Mongo
 # collectors: osg-flock.grid.iu.edu, uc3-mgt.mwt2.org, appcloud.uchicago.edu
-# Takes ~3 seconds each time
-# Problems: 1 wait time for all 3 collectors, would be better to have a longer wait time for osg-flock,
-#           implementation of futures may not be correct so this would not be faster than no concurrent version
-
+# Having a hard time precisely counting jobs processsed per second, but generally a couple thousand jobs won't take more than 3 seconds
 
 import sys, time, argparse
 import classad, htcondor
@@ -24,7 +21,7 @@ def mongo_store(coll):
     for slot in slot_state:
         sl = dict(slot)
         if 'JobId' in sl:
-            sl['_id'] = sl.pop('JobId') #JobId will become _id for mongo db
+            sl['_id'] = sl.pop('JobId') #JobId will become _id for mongo
         else:
             continue
         if 'TargetType' in sl: #TargetType, CurrentTime, and MyType tag along for some reason
@@ -43,13 +40,16 @@ def main():
         parser.add_argument("time", help="time to wait between polling")
         args = parser.parse_args()
 
+        st = float(time.time())
         #not sure if using futures correctly, idea is to run 3 mongo_stores concurrently
         with futures.ThreadPoolExecutor(max_workers=3) as executor:
             executor.submit(mongo_store, htcondor.Collector('osg-flock.grid.iu.edu'))
             executor.submit(mongo_store, htcondor.Collector('uc3-mgt.mwt2.org'))
             executor.submit(mongo_store, htcondor.Collector('appcloud.uchicago.edu'))
+        et = float(time.time())
+
+        print("Total time: ", et - st)
 
         time.sleep(float(args.time))
 
 main()
-
