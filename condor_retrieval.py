@@ -1,3 +1,4 @@
+File Edit Options Buffers Tools Python Help
 # Erik Halperin, 6/26/14
 # Polls Condor collectors for some data and outputs it to Mongo
 # There must be a config.ini with a [poll] section and the options collectors and intervals, the values of which should be seperated by commas
@@ -65,14 +66,15 @@ def mongo_store(coll, intv):
                 del sl['MyType']
             dbc.insert(sl)
 
-        time.sleep(interval)
-        
+        time.sleep(intv)
+
 def main():
     ret_list = config_parse() #collectors = ret_list[0], intervals = ret_list[1]
 
-    with futures.ThreadPoolExecutor(max_workers=3) as executor:
+    with futures.ThreadPoolExecutor(max_workers=len(ret_list[1]) as executor:
         for collector, interval in zip(ret_list[0],ret_list[1]):
             executor.submit(mongo_store, htcondor.Collector(collector), interval)
 
 main()
+
 
