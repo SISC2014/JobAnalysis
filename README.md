@@ -1,7 +1,7 @@
 JobAnalysis
 ===========
 
-_Visualizes data taken from a Mongo DB of condor jobs from OSG Connect_
+__Visualizes data taken from a Mongo DB of condor jobs from OSG Connect__
 
 
 
