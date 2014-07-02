@@ -6,19 +6,19 @@
 
 import sys, time, signal
 import classad, htcondor
-from pymongo import Connection #to connect to mongo
-from concurrent import futures #for processing collectors concurrently
-from ConfigParser import RawConfigParser #for reading from config.ini
+from pymongo import Connection # to connect to mongo
+from concurrent import futures # for processing collectors concurrently
+from ConfigParser import RawConfigParser # for reading from config.ini
 
-#set up mongo collection
+# set up mongo collection
 connection = Connection('mc.mwt2.org', 27017)
 db = connection.visualization_db
 dbc = db.condor_records
 
-#default wait time interval
+# default wait time interval
 def_int = 30
 
-#main thread changes this to signal child threads to exit
+# main thread changes this to signal child threads to exit
 exit_flag = False
 
 def config_parse():
@@ -28,45 +28,46 @@ def config_parse():
     collectors = []
     intervals = []
     if conf.has_section('poll'):
-        #get collectors
+        # get collectors
         if conf.has_option('poll', 'collectors'):
             value = conf.get('poll', 'collectors')
             for v in value.split(','):
                 collectors.append(v.strip())
 
-        #get wait intervals for collectors
+        # get wait intervals for collectors
         if conf.has_option('poll', 'intervals'):
             value = conf.get('poll', 'intervals')
             for v in value.split(','):
                 intervals.append(int(v.strip()))
 
-    #make sure each collector has an interval
+    # make sure each collector has an interval
     if(len(collectors) != len(intervals)):
         sys.stderr.write('config.ini: each collector must have a wait interval\n')
         sys.exit(0)
 
-    #make sure each interval is a positive number
+    # make sure each interval is a positive number
     new_intvs = [i if i > 0 else def_int for i in intervals]
 
     return [collectors, new_intvs]
 
 def mongo_store(coll, intv):
     while(True):
+        # gets each job running on condor rather than ones created since last poll - this needs to be changed
         slot_state = coll.query(htcondor.AdTypes.Startd,'true',['Name','RemoteGroup','NodeOnline','JobId','State','RemoteOwner','COLLECTOR_HOST_STRING'])
-        timestamp = str(int(time.time())) #don't have a use for this yet
+        timestamp = str(int(time.time())) # don't have a use for this yet
 
         if exit_flag is True:
             sys.exit()
 
-        #storing data into mongo
+        # storing data into mongo
         for slot in slot_state:
             sl = dict(slot)
             if 'JobId' in sl:
-                #JobId will become _id for mongo storage
+                # JobId will become _id for mongo storage
                 sl['_id'] = sl.pop('JobId')
             else:
                 continue
-            #Remove TargetType, CurrentTime, and MyType
+            # Remove TargetType, CurrentTime, and MyType
             if 'TargetType' in sl:
                 del sl['TargetType']
             if 'CurrentTime' in sl:
@@ -78,15 +79,15 @@ def mongo_store(coll, intv):
         time.sleep(intv)
 
 def main():
-    ret_list = config_parse() #collectors = ret_list[0], intervals = ret_list[1]
+    ret_list = config_parse() # collectors = ret_list[0], intervals = ret_list[1]
     global exit_flag
 
-    #process each collector in a thread running concurrently with the other threads
+    # process each collector in a thread running concurrently with the other threads
     with futures.ThreadPoolExecutor(max_workers=len(ret_list[1])) as executor:
         for collector, interval in zip(ret_list[0],ret_list[1]):
             executor.submit(mongo_store, htcondor.Collector(collector), interval)
         while True:
-            #pause indefinitely, waiting for SIGINT
+            # pause indefinitely, waiting for SIGINT
             try:
                 signal.pause()
             except KeyboardInterrupt:
@@ -94,7 +95,7 @@ def main():
             except:
                 pass
 
-        #once out of infinite loop, end child threads
+        # once out of infinite loop, end child threads
         exit_flag = True
         print('\nWaiting for child threads to exit...')
         sys.exit(0)
