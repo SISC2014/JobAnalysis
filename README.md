@@ -1,7 +1,7 @@
 JobAnalysis
 ===========
 
-Visualizes data taken from a Mongo DB of condor jobs from OSG Connect
+_Visualizes data taken from a Mongo DB of condor jobs from OSG Connect_
 
 
 
@@ -15,7 +15,7 @@ MongoRetrieval/src/JSONEncoder.py - practice program to encode data from mongo i
 
 MongoRetrieval/src/ListOfSites.txt - required for JSONEncoder.py
 
-MongoRetrieval/src/__pycache__ - required for JSONEncoder.py
+MongoRetrieval/src/pycache - required for JSONEncoder.py
 
 efficiency-hisogram.wsgi - practice program to create wsgi for mongo data
 
