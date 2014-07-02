@@ -1,4 +1,3 @@
-File Edit Options Buffers Tools Python Help
 # Erik Halperin, 6/26/14
 # Polls Condor collectors for some data and outputs it to Mongo
 # There must be a config.ini with a [poll] section and the options collectors and intervals, the values of which should be seperated by commas
