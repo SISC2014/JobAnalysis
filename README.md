@@ -5,7 +5,7 @@ Visualizes data taken from a Mongo DB of condor jobs from OSG Connect
 
 
 
-condor_retrieval.py - retrieves currently running job data from collectors and stores them into a mongo database
+condor_retrieval.py - retrieves currently running job data from collectors and stores them into a mongo database\n
 config.ini - required for condor_retrieval (contains list of collectors and wait intervals)
 
 MongoRetrieval/src/EfficiencyHistogram.py - creates histograms of efficiencies of condor jobs
