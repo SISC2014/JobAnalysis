@@ -2,8 +2,9 @@
 # Polls Condor collectors for some data and outputs it to Mongo
 # There must be a config.ini with a [poll] section and the options collectors and intervals, the values of which should be seperated by commas
 # Having a hard time precisely counting jobs processsed per second, but generally a couple thousand jobs won't take more than 3 seconds
+# End program by keyboard interrupt (ctrl-c)
 
-import sys, time
+import sys, time, signal
 import classad, htcondor
 from pymongo import Connection #to connect to mongo
 from concurrent import futures #for processing collectors concurrently
@@ -16,6 +17,9 @@ dbc = db.condor_records
 
 #default wait time interval
 def_int = 30
+
+#main thread changes this to signal child threads to exit
+exit_flag = False
 
 def config_parse():
     conf = RawConfigParser()
@@ -36,11 +40,12 @@ def config_parse():
             for v in value.split(','):
                 intervals.append(int(v.strip()))
 
-    #errors and checking
+    #make sure each collector has an interval
     if(len(collectors) != len(intervals)):
         sys.stderr.write('config.ini: each collector must have a wait interval\n')
         sys.exit(0)
 
+    #make sure each interval is a positive number
     new_intvs = [i if i > 0 else def_int for i in intervals]
 
     return [collectors, new_intvs]
@@ -48,16 +53,21 @@ def config_parse():
 def mongo_store(coll, intv):
     while(True):
         slot_state = coll.query(htcondor.AdTypes.Startd,'true',['Name','RemoteGroup','NodeOnline','JobId','State','RemoteOwner','COLLECTOR_HOST_STRING'])
-        timestamp = str(int(time.time()))
+        timestamp = str(int(time.time())) #don't have a use for this yet
+
+        if exit_flag is True:
+            sys.exit()
 
         #storing data into mongo
         for slot in slot_state:
             sl = dict(slot)
             if 'JobId' in sl:
-                sl['_id'] = sl.pop('JobId') #JobId will become _id for mongo
+                #JobId will become _id for mongo storage
+                sl['_id'] = sl.pop('JobId')
             else:
                 continue
-            if 'TargetType' in sl: #TargetType, CurrentTime, and MyType tag along for some reason
+            #Remove TargetType, CurrentTime, and MyType
+            if 'TargetType' in sl:
                 del sl['TargetType']
             if 'CurrentTime' in sl:
                 del sl['CurrentTime']
@@ -69,11 +79,24 @@ def mongo_store(coll, intv):
 
 def main():
     ret_list = config_parse() #collectors = ret_list[0], intervals = ret_list[1]
+    global exit_flag
 
-    with futures.ThreadPoolExecutor(max_workers=len(ret_list[1]) as executor:
+    #process each collector in a thread running concurrently with the other threads
+    with futures.ThreadPoolExecutor(max_workers=len(ret_list[1])) as executor:
         for collector, interval in zip(ret_list[0],ret_list[1]):
             executor.submit(mongo_store, htcondor.Collector(collector), interval)
+        while True:
+            #pause indefinitely, waiting for SIGINT
+            try:
+                signal.pause()
+            except KeyboardInterrupt:
+                break
+            except:
+                pass
+
+        #once out of infinite loop, end child threads
+        exit_flag = True
+        print('\nWaiting for child threads to exit...')
+        sys.exit(0)
 
 main()
-
-
