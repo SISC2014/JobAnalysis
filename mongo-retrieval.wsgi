@@ -1,4 +1,7 @@
 '''
+Erik Halperin, 07/01/2014
+
+'''
 from cgi import parse_qs # for parsing query_strings in url
 import re # for character removal from strings
 from pymongo import MongoClient # connect to mongodb
@@ -12,6 +15,7 @@ client = MongoClient('mc.mwt2.org', 27017)
 db = client.condor_history
 coll = db.history_records
 
+
 def get_coord(host):
     worked = 0
     try:
@@ -22,25 +26,20 @@ def get_coord(host):
         lon = res['longitude']
         lat = res['latitude']
         worked = 1
-        return [lon, lat]
-    except:
-        return ['f1a']
-        if debug:
-           # do something
-           return ['f1b']
+        return [lat, lon]
+    except Exception:
+        pass
     if not worked:
         try:
-           return ['s2']
            req = urllib2.Request("http://freegeoip.net/json/"+host, None)
            opener = urllib2.build_opener()
            f = opener.open(req, timeout=5)
            res = json.load(f)
            lon = res['longitude']
            lat = res['latitude']
-           return [lon, lat]
-        except:
-           return ['f2']
-
+           return [lat, lon]
+        except Exception:
+           return [0] # failure
 
 def str_to_num(lst):
     new_list = []
@@ -113,9 +112,9 @@ def application(environ, start_response):
     response_body = []
 
     for uv in unique_vals:
-        response_body.append( {uv: get_coord(uv)} )
-        #response_body.append({ uv: count_completions(key, uv, hours) })
-        #response_body.append(get_coord(uv))
+        cd = get_coord(uv)
+        cmp = count_completions(key, uv, hours)
+        response_body.append({ uv: [cd, cmp] })
 
     response_headers = [('Content-type', 'application/json')]
     status = '200 OK'
