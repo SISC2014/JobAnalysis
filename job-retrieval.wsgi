@@ -73,17 +73,19 @@ def modify(job):
     if 'ProjectName' in job:
        job['ProjectName'] = re.sub('[\"]', '', job['ProjectName'])
 
-    # convert LastRemoteHost to coordinates - possibly defunct
-    #if 'LastRemoteHost' in job:
-    #   site = re.sub('[\"]', '', job['LastRemoteHost'])
-    #   site = site.split('@', 1)[-1]
-    #   site = site.split('.', 1)[-1]
-    #   job['LastRemoteHost'] = get_cds(site)
-
     # convert StartdPrincipal to coordinates
     site = re.sub('[\"]', '', job['StartdPrincipal'])
     site = site.split('/', 1)[-1]
     job['StartdPrincipal'] = get_cds(site)
+
+    # make key names nice
+    job['Project'] = job.pop('ProjectName')
+    job['Coordinates'] = job.pop('StartdPrincipal')
+    job['StartTime'] = job.pop('JobStartDate')
+    job['EndTime'] = job.pop('CompletionDate')
+    job['WallTime'] = job.pop('RemoteWallClockTime')
+    job['CPUTime'] = job.pop('RemoteUserCpu')
+    job['JobId'] = job.pop('_id')
 
     return job
 
@@ -105,15 +107,28 @@ def application(environ, start_response):
     # parsing query strings
     d = parse_qs(environ['QUERY_STRING'])
     hours = int(d.get('hours', [''])[0])
+    callback = d.get('callback', [''])[0]
 
-    response_body = query_jobs(hours)
+    response_body = json.dumps(query_jobs(hours))
 
-    response_headers = [('Content-type', 'application/json')]
     status = '200 OK'
+
+    # returns JSONP if callback function is included
+    try:
+        response_headers = [('Content-type', 'application/javascript')]
+        response_body = callback + '(' + response_body + ');'
+        start_response(status, response_headers)
+        return response_body
+    except Exception:
+        pass
+
+    # otherwise return JSON
+    response_headers = [('Content-type', 'application/json')]
     start_response(status, response_headers)
+    return response_body
 
-    return json.dumps(response_body)
-
+# tries to display error instead of generic 500 Internal Server Error
+# courtesy of dgc
 def error_capture(app):
     import cgitb
 
