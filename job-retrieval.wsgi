@@ -11,7 +11,7 @@ import time # for timestamp
 import urllib2, sys # converting ip address to geo coordinates
 
 # connect to database
-client = MongoClient('mc.mwt2.org', 27017)
+client = MongoClient('db.mwt2.org', 27017)
 db = client.condor_history
 coll = db.history_records
 
