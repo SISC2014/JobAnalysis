@@ -1,14 +1,13 @@
 #!/usr/bin/python
-'''
-Erik Halperin, 07/01/2014
+# Erik Halperin, 07/01/2014
 
-'''
 from cgi import parse_qs # for parsing query_strings in url
 import re # for character removal from strings
 from pymongo import MongoClient # connect to mongodb
 import json # output json document
 import time # for timestamp
 import urllib2, sys # converting ip address to geo coordinates
+import subprocess # mapping username to real name in system
 
 # connect to database
 client = MongoClient('db.mwt2.org', 27017)
@@ -17,6 +16,9 @@ coll = db.history_records
 
 # global cache for site to coordinate mapping
 site_cache = {}
+
+# cache for username to name mapping
+user_cache = {}
 
 def get_cds(host):
     worked = 0
@@ -59,15 +61,29 @@ def get_cds(host):
            return [0] # failure
 
 def modify(job):
+    global user_cache
     # convert all strings to ints
     job['JobStartDate'] = int(job['JobStartDate'])
     job['CompletionDate'] = int(job['CompletionDate'])
     job['RemoteWallClockTime'] = float(job['RemoteWallClockTime'])
     job['RemoteUserCpu'] = float(job['RemoteUserCpu'])
 
-    # remove unnecessary characters from User
-    user = re.sub('[\"]', '', job['User'])
-    job['User'] = user.split('@', 1)[0]
+    # change User to actual User's name
+    if job['User'] in user_cache:
+        job['User'] = user_cache[job['User']]
+    else:
+        username = re.sub('[\"]', '', job['User'])
+        username = username.split('@', 1)[0]
+
+        p1 = subprocess.Popen(['finger', username], stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(['sed', '-e', '/Name/!d', '-e', 's/.*Name: //'], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1.stdout.close()
+
+        username = re.sub('[\n]', '', p2.communicate()[0])
+
+        site_cache.update({ job['User']: username })
+
+        job['User'] = username
 
     # remove unncessary chars from ProjectName
     if 'ProjectName' in job:
@@ -76,16 +92,19 @@ def modify(job):
     # convert StartdPrincipal to coordinates
     site = re.sub('[\"]', '', job['StartdPrincipal'])
     site = site.split('/', 1)[-1]
-    job['StartdPrincipal'] = get_cds(site)
+    cds = get_cds(site)
+    job['StartdPrincipal'] = cds[0] # latitude
+    job['longitude'] = cds[1]
 
-    # make key names nice
-    job['Project'] = job.pop('ProjectName')
-    job['Coordinates'] = job.pop('StartdPrincipal')
-    job['StartTime'] = job.pop('JobStartDate')
-    job['EndTime'] = job.pop('CompletionDate')
-    job['WallTime'] = job.pop('RemoteWallClockTime')
-    job['CPUTime'] = job.pop('RemoteUserCpu')
-    job['JobId'] = job.pop('_id')
+    # make key names nice + lowercase
+    job['latitude'] = job.pop('StartdPrincipal')
+    job['starttime'] = job.pop('JobStartDate')
+    job['endtime'] = job.pop('CompletionDate')
+    job['walltime'] = job.pop('RemoteWallClockTime')
+    job['cputime'] = job.pop('RemoteUserCpu')
+    job['jobid'] = job.pop('_id')
+    job['user'] = job.pop('User')
+    job['project'] = job.pop('ProjectName')
 
     return job
 
@@ -109,7 +128,7 @@ def application(environ, start_response):
     hours = int(d.get('hours', [''])[0])
     callback = d.get('callback', [''])[0]
 
-    response_body = json.dumps(query_jobs(hours))
+    response_body = json.dumps(query_jobs(hours), indent=1)
 
     status = '200 OK'
 
