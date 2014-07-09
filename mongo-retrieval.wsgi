@@ -1,3 +1,4 @@
+#!/usr/bin/python
 '''
 Erik Halperin, 07/01/2014
 
@@ -123,32 +124,32 @@ def application(environ, start_response):
 
     return json.dumps(response_body)
 
-# doesnt' seem to work at the moment
 def error_capture(app):
-    import cgitb
+	import cgitb
 
-    def wrapper(environ, start_response):
-        environ['.contenttype'] = None
-        def wrapped_start_response(status, response_headers):
-            for name, value in response_headers:
-                if name.lower() == 'content-type':
-                   environ['.contenttype'] = value
-            start_response(status, response_headers)
+	def wrapper(environ, start_response):
+		environ['.contenttype'] = None
+		def wrapped_start_response(status, response_headers):
+			for name, value in response_headers:
+				if name.lower() == 'content-type':
+					environ['.contenttype'] = value
+			start_response(status, response_headers)
 
-    try:
-        return app(environ, wrapped_start_response)
-    except Exception:
-        import sys
+		try:
+			return app(environ, wrapped_start_response)
 
-        if environ['.contenttype'] is None:
-           start_response('500 Error', [('Content-type', 'text/plain')])
-           trace = cgitb.text(sys.exc_info())
-        elif environ['.contenttype'].lower() == 'text/html':
-           trace = cgitb.html(sys.exc_info())
-        else:
-           trace = cgitb.text(sys.exc_info())
+		except Exception:
+			import sys
+					
+			if environ['.contenttype'] is None:
+				start_response('500 Error', [('Content-type', 'text/plain')])
+				trace = cgitb.text(sys.exc_info())
+			elif environ['.contenttype'].lower() == 'text/html':
+				trace = cgitb.html(sys.exc_info())
+			else:
+				trace = cgitb.text(sys.exc_info())
 
-        return [trace]
-    return wrapper
-
-#application = error_capture(application)
+			return [trace]
+	return wrapper
+	
+application = error_capture(application)
