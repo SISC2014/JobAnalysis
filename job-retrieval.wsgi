@@ -1,3 +1,4 @@
+#!/usr/bin/python
 '''
 Erik Halperin, 07/01/2014
 
@@ -6,8 +7,7 @@ from cgi import parse_qs # for parsing query_strings in url
 import re # for character removal from strings
 from pymongo import MongoClient # connect to mongodb
 import json # output json document
-import unicodedata # convert unicode strings to english
-import datetime, time # for converting unix time
+import time # for timestamp
 import urllib2, sys # converting ip address to geo coordinates
 
 # connect to database
@@ -73,15 +73,19 @@ def modify(job):
     if 'ProjectName' in job:
        job['ProjectName'] = re.sub('[\"]', '', job['ProjectName'])
 
-    # convert LastRemoteHost to coordinates
-    if 'LastRemoteHost' in job:
-       site = re.sub('[\"]', '', job['LastRemoteHost'])
-       site = site.split('@', 1)[-1]
-       site = site.split('.', 1)[-1]
-       job['LastRemoteHost'] = get_cds(site)
+    # convert LastRemoteHost to coordinates - possibly defunct
+    #if 'LastRemoteHost' in job:
+    #   site = re.sub('[\"]', '', job['LastRemoteHost'])
+    #   site = site.split('@', 1)[-1]
+    #   site = site.split('.', 1)[-1]
+    #   job['LastRemoteHost'] = get_cds(site)
+
+    # convert StartdPrincipal to coordinates
+    site = re.sub('[\"]', '', job['StartdPrincipal'])
+    site = site.split('/', 1)[-1]
+    job['StartdPrincipal'] = get_cds(site)
 
     return job
-
 
 def query_jobs(hours):
     jobs = []
@@ -89,20 +93,13 @@ def query_jobs(hours):
 
     crit = { 'JobStartDate': { '$gt': secs_ago } }
     proj = { 'JobStartDate': 1, 'CompletionDate': 1, 'RemoteWallClockTime': 1, 'RemoteUserCpu': 1, \
-             'LastRemoteHost': 1, 'ProjectName': 1, 'User': 1, 'ClusterId': 1 }
+             'StartdPrincipal': 1, 'ProjectName': 1, 'User': 1, 'ClusterId': 1 }
 
     for condor_history in coll.find(crit, proj):
-        jobs.append(modify(condor_history))
+        if 'StartdPrincipal' in condor_history:
+           jobs.append(modify(condor_history))
 
-    # temporary (terrible) fix for geolocation problems
-    jobs_new = []
-    for job in jobs:
-        if job.get('LastRemoteHost') != [51.5, -0.13]:
-           if job.get('LastRemoteHost') != [0]:
-              jobs_new.append(job)
-
-    return jobs_new
-
+    return jobs
 
 def application(environ, start_response):
     # parsing query strings
@@ -116,3 +113,31 @@ def application(environ, start_response):
     start_response(status, response_headers)
 
     return json.dumps(response_body)
+
+def error_capture(app):
+    import cgitb
+
+    def wrapper(environ, start_response):
+        environ['.contenttype'] = None
+        def wrapped_start_response(status, response_headers):
+            for name, value in response_headers:
+                if name.lower() == 'content-type':
+                    environ['.contenttype'] = value
+            start_response(status, response_headers)
+
+        try:
+            return app(environ, wrapped_start_response)
+
+        except Exception:
+            if environ['.contenttype'] is None:
+                start_response('500 Error', [('Content-type', 'text/plain')])
+                trace = cgitb.text(sys.exc_info())
+            elif environ['.contenttype'].lower() == 'text/html':
+                trace = cgitb.html(sys.exc_info())
+            else:
+                trace = cgitb.text(sys.exc_info())
+
+            return [trace]
+    return wrapper
+
+application = error_capture(application)
