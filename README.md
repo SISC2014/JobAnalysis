@@ -21,4 +21,4 @@ efficiency-hisogram.wsgi - practice program to create wsgi for mongo data
 
 mongo-retrieval.wsgi - takes data from mongo and outputs it as JSON docs
 
-job-retrieval.wsgi - outputs json doc of jobs completed in the last X hours along with their project, user, cluster, start/end time, wall time, cpu time, and site coordinates
+job-retrieval.wsgi - outputs json doc of jobs completed in the last X hours along with their project, user, cluster, start/end time, wall time, cpu time, site, and site coordinates
