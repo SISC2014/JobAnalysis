@@ -26,7 +26,7 @@ def get_cds(host):
 
     # check cache for value
     if host in site_cache:
-       return site_cache[host]
+        return site_cache.get(host)
 
     try:
         req = urllib2.Request("http://geoip.mwt2.org:4288/json/"+host, None)
@@ -57,8 +57,9 @@ def get_cds(host):
            return [lat, lon]
 
         except Exception:
-           site_cache.update({ host: [0] })
-           return [0] # failure
+            # if ip address can't be resolved to geo coordinates, return impossible ones to be removed later
+            site_cache.update({ host: [-200,-200] })
+            return [-200, -200]
 
 def modify(job):
     global user_cache
@@ -69,8 +70,9 @@ def modify(job):
     job['RemoteUserCpu'] = float(job['RemoteUserCpu'])
 
     # change User to actual User's name
-    if job['User'] in user_cache:
-        job['User'] = user_cache[job['User']]
+    username = job['User']
+    if username in user_cache:
+        job['User'] = user_cache.get(username)
     else:
         username = re.sub('[\"]', '', job['User'])
         username = username.split('@', 1)[0]
@@ -80,8 +82,7 @@ def modify(job):
         p1.stdout.close()
 
         username = re.sub('[\n]', '', p2.communicate()[0])
-
-        site_cache.update({ job['User']: username })
+        user_cache.update({ job['User']: username })
 
         job['User'] = username
 
@@ -105,6 +106,7 @@ def modify(job):
     job['jobid'] = job.pop('_id')
     job['user'] = job.pop('User')
     job['project'] = job.pop('ProjectName')
+    job['clusterid'] = job.pop('ClusterId')
 
     return job
 
@@ -118,7 +120,10 @@ def query_jobs(hours):
 
     for condor_history in coll.find(crit, proj):
         if 'StartdPrincipal' in condor_history:
-           jobs.append(modify(condor_history))
+            job = modify(condor_history)
+            # if job's lat is -200, don't append it
+            if job.get('latitude') != -200:
+                jobs.append(job)
 
     return jobs
 
