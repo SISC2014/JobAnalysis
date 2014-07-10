@@ -86,9 +86,9 @@ def modify(job):
 
         job['User'] = username
 
-    # remove unncessary chars from ProjectName
-    if 'ProjectName' in job:
-       job['ProjectName'] = re.sub('[\"]', '', job['ProjectName'])
+    # remove unncessary chars from ProjectName and site
+    job['ProjectName'] = re.sub('[\"]', '', job['ProjectName'])
+    job['MATCH_EXP_JOBGLIDEIN_ResourceName'] = re.sub('[\"]', '', job['MATCH_EXP_JOBGLIDEIN_ResourceName'])
 
     # convert StartdPrincipal to coordinates
     site = re.sub('[\"]', '', job['StartdPrincipal'])
@@ -107,6 +107,7 @@ def modify(job):
     job['user'] = job.pop('User')
     job['project'] = job.pop('ProjectName')
     job['clusterid'] = job.pop('ClusterId')
+    job['site'] = job.pop('MATCH_EXP_JOBGLIDEIN_ResourceName')
 
     return job
 
@@ -116,7 +117,7 @@ def query_jobs(hours):
 
     crit = { 'JobStartDate': { '$gt': secs_ago } }
     proj = { 'JobStartDate': 1, 'CompletionDate': 1, 'RemoteWallClockTime': 1, 'RemoteUserCpu': 1, \
-             'StartdPrincipal': 1, 'ProjectName': 1, 'User': 1, 'ClusterId': 1 }
+             'StartdPrincipal': 1, 'ProjectName': 1, 'User': 1, 'ClusterId': 1, 'MATCH_EXP_JOBGLIDEIN_ResourceName': 1 }
 
     for condor_history in coll.find(crit, proj):
         if 'StartdPrincipal' in condor_history:
