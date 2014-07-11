@@ -7,26 +7,24 @@ from pymongo import MongoClient # connect to mongodb
 import json # output json document
 import time # for timestamp
 import urllib2, sys # converting ip address to geo coordinates
-import subprocess # mapping username to real name in system
+
+import pwd # mapping username to real name from OSG database
+# ***Accessing OSG database requires the program to run on OSG***
 
 # connect to database
 client = MongoClient('db.mwt2.org', 27017)
 db = client.condor_history
 coll = db.history_records
 
-# global cache for site to coordinate mapping
+# ca-ching $$$
 site_cache = {}
-
-# cache for username to name mapping
 user_cache = {}
+project_cache = {}
+resource_cache = {}
+
 
 def get_cds(host):
     worked = 0
-    global site_cache
-
-    # check cache for value
-    if host in site_cache:
-        return site_cache.get(host)
 
     try:
         req = urllib2.Request("http://geoip.mwt2.org:4288/json/"+host, None)
@@ -36,9 +34,6 @@ def get_cds(host):
         lon = res['longitude']
         lat = res['latitude']
         worked = 1
-
-        # update cache
-        site_cache.update({ host: [lat, lon] })
 
         return [lat, lon]
 
@@ -52,17 +47,15 @@ def get_cds(host):
            res = json.load(f)
            lon = res['longitude']
            lat = res['latitude']
-           site_cache.update({ host: [lat, lon] })
 
            return [lat, lon]
 
         except Exception:
             # if ip address can't be resolved to geo coordinates, return impossible ones to be removed later
-            site_cache.update({ host: [-200,-200] })
             return [-200, -200]
 
 def modify(job):
-    global user_cache
+    global user_cache, site_cache, resource_cache, project_cache
     # convert all strings to ints
     job['JobStartDate'] = int(job['JobStartDate'])
     job['CompletionDate'] = int(job['CompletionDate'])
@@ -76,24 +69,39 @@ def modify(job):
     else:
         username = re.sub('[\"]', '', job['User'])
         username = username.split('@', 1)[0]
+        username = pwd.getpwnam(username)
 
-        p1 = subprocess.Popen(['finger', username], stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(['sed', '-e', '/Name/!d', '-e', 's/.*Name: //'], stdin=p1.stdout, stdout=subprocess.PIPE)
-        p1.stdout.close()
+        user_cache.update({ job['User']: username.pw_gecos })
 
-        username = re.sub('[\n]', '', p2.communicate()[0])
-        user_cache.update({ job['User']: username })
-
-        job['User'] = username
+        job['User'] = username.pw_gecos
 
     # remove unncessary chars from ProjectName and site
-    job['ProjectName'] = re.sub('[\"]', '', job['ProjectName'])
-    job['MATCH_EXP_JOBGLIDEIN_ResourceName'] = re.sub('[\"]', '', job['MATCH_EXP_JOBGLIDEIN_ResourceName'])
+    project = job['ProjectName']
+    if project in project_cache:
+        job['ProjectName'] = project_cache.get(project)
+    else:
+        project = re.sub('[\"]', '', job['ProjectName'])
+        user_cache.update({ job['ProjectName']: project })
+        job['ProjectName'] = project
+
+    resource = job['MATCH_EXP_JOBGLIDEIN_ResourceName']
+    if resource in resource_cache:
+        job['MATCH_EXP_JOBGLIDEIN_ResourceName'] = resource_cache.get(resource)
+    else:
+        resource = re.sub('[\"]', '', job['MATCH_EXP_JOBGLIDEIN_ResourceName'])
+        resource_cache.update({ job['MATCH_EXP_JOBGLIDEIN_ResourceName']: resource })
+        job['MATCH_EXP_JOBGLIDEIN_ResourceName'] = resource
 
     # convert StartdPrincipal to coordinates
-    site = re.sub('[\"]', '', job['StartdPrincipal'])
-    site = site.split('/', 1)[-1]
-    cds = get_cds(site)
+    site = job['StartdPrincipal']
+    if site in site_cache:
+        cds = site_cache.get(site)
+    else:
+        site = re.sub('[\"]', '', job['StartdPrincipal'])
+        site = site.split('/', 1)[-1]
+        cds = get_cds(site)
+        site_cache.update({ job['StartdPrincipal']: cds })
+
     job['StartdPrincipal'] = cds[0] # latitude
     job['longitude'] = cds[1]
 
