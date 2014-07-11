@@ -9,24 +9,25 @@ import time # for timestamp
 import urllib2, sys # converting ip address to geo coordinates
 
 import pwd # mapping username to real name from OSG database
-# ***Accessing OSG database requires the program to run on OSG***
+# ***Accessing OSG database (for usernames) requires the program to run on OSG***
 
 # connect to database
 client = MongoClient('db.mwt2.org', 27017)
 db = client.condor_history
 coll = db.history_records
 
-# ca-ching $$$
+# caching for mapping site ip address to geo coordinates, mapping username to user's name
+# and mapping project/resource names to names with unnecessary characters removed
 site_cache = {}
 user_cache = {}
 project_cache = {}
 resource_cache = {}
 
-
 def get_cds(host):
     worked = 0
 
     try:
+        # try mwt2's instance of geoip
         req = urllib2.Request("http://geoip.mwt2.org:4288/json/"+host, None)
         opener = urllib2.build_opener()
         f = opener.open(req, timeout=5)
@@ -36,9 +37,10 @@ def get_cds(host):
         worked = 1
 
         return [lat, lon]
-
     except Exception:
         pass
+
+    # use freegeoip
     if not worked:
         try:
            req = urllib2.Request("http://freegeoip.net/json/"+host, None)
@@ -49,14 +51,13 @@ def get_cds(host):
            lat = res['latitude']
 
            return [lat, lon]
-
         except Exception:
             # if ip address can't be resolved to geo coordinates, return impossible ones to be removed later
             return [-200, -200]
 
 def modify(job):
-    global user_cache, site_cache, resource_cache, project_cache
-    # convert all strings to ints
+    global user_cache, site_cache, resource_cache, project_cache # ca-ching $$$
+    # convert strings to ints
     job['JobStartDate'] = int(job['JobStartDate'])
     job['CompletionDate'] = int(job['CompletionDate'])
     job['RemoteWallClockTime'] = float(job['RemoteWallClockTime'])
@@ -105,7 +106,7 @@ def modify(job):
     job['StartdPrincipal'] = cds[0] # latitude
     job['longitude'] = cds[1]
 
-    # make key names nice + lowercase
+    # make key names nice & lowercase
     job['latitude'] = job.pop('StartdPrincipal')
     job['starttime'] = job.pop('JobStartDate')
     job['endtime'] = job.pop('CompletionDate')
@@ -130,7 +131,7 @@ def query_jobs(hours):
     for condor_history in coll.find(crit, proj):
         if 'StartdPrincipal' in condor_history:
             job = modify(condor_history)
-            # if job's lat is -200, don't append it
+            # if job's lat is -200, could not get coordinates, so remove job
             if job.get('latitude') != -200:
                 jobs.append(job)
 
