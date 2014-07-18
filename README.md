@@ -19,8 +19,10 @@ MongoRetrieval/src/pycache - required for JSONEncoder.py
 
 efficiency-hisogram.wsgi - practice program to create wsgi for mongo data
 
-mongo-retrieval.wsgi - takes data from mongo and outputs it as JSON docs
+mongo-retrieval.wsgi -  practice program that takes data from mongo and outputs it as JSON docs
 
 job-retrieval.wsgi - outputs json doc of jobs completed in the last X hours along with their project, user, cluster, start/end time, wall time, cpu time, site, and site coordinates
 
 reality-check.wsgi - returns total wall time for last eight days for user/project/site. goal is to compare with data provided by oim
+
+site-map.wsgi - returns json doc of total wall time, cpu time, and # of jobs, grouped by project, grouped by site
