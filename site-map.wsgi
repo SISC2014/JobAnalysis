@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # Erik Halperin, 07/01/2014
 
-# TODO: aggregation once mongodb is changed
-
 from cgi import parse_qs # for parsing query_strings in url
 import re # for character removal from strings
 from pymongo import MongoClient # connect to mongodb
@@ -51,62 +49,49 @@ def get_cds(host):
             return [-200, -200]
 
 def query_jobs(hours, sites):
-    jobs = []
-    resource = 'MATCH_EXP_JOBGLIDEIN_ResourceName'
-    secs_ago = str(time.time() - hours * 60 * 60)
+    site_list = []
+    resource = '$MATCH_EXP_JOBGLIDEIN_ResourceName'
+    secs_ago = time.time() - hours * 60 * 60
+
+    entries = coll.aggregate([{'$match':{'CompletionDate':{'$gte':secs_ago}}},{'$group':{'_id':{'project':'$ProjectName','site':resource},'wallhours':{'$sum':'$RemoteWallClockTime'},'count':{'$sum':1}}}])["result"]
 
     for site in sites:
-        site_dict = { 'site': re.sub('[\"]', '', site[0]) } # remove excess quotes
-
-        # get each project for each site
-        criteria = { 'JobStartDate': { '$gt': secs_ago }, resource : site[0] }
-
-        project_names = coll.find(criteria).distinct('ProjectName')
-
-        # get sum of wall times & total jobs for each project
-        projects = []
-
-        for project in project_names:
-                proj_dict = {'project': re.sub('[\"]', '', project) }
-
-                # TODO: Once db updated, use $sum
-                criteria2 = { 'JobStartDate': { '$gt': secs_ago }, resource: site[0], 'ProjectName': project }
-                projection2 = { 'RemoteWallClockTime': 1 }
-
-                wall_time_tot = 0
-                for wall_time in coll.find(criteria2, projection2):
-                    if 'RemoteWallClockTime' in wall_time:
-                        wall_time_tot += float(wall_time['RemoteWallClockTime'])
-
-                proj_dict.update( { 'walltime': wall_time_tot/60/60 } ) # seconds to hours
-                proj_dict.update( { 'jobs': coll.find(criteria2).count() } ) # get number of jobs
-                projects.append(proj_dict)
-
-        # get coordinates
+        # get site coordinates
         cds = get_cds(site[1])
 
-        # add coords & job info to site_dict
-        site_dict.update( {'latitude': cds[0] } )
-        site_dict.update( {'longitude': cds[1] } )
-        site_dict.update( {'projects': projects } )
+        site_dict = { 'site': site[0], 'latitude': cds[0], 'longitude': cds[1] }
 
-        jobs.append(site_dict)
+        project_list = []
 
-    return jobs
+        for entry in entries:
+            if entry["_id"].get('site') == site[0]:
+                proj_dict = { 'wallhours': entry['wallhours']/60/60, 'jobs': entry['count'], 'project': entry['_id'].get('project') }
+            else:
+                continue
+
+            project_list.append(proj_dict)
+
+        site_dict.update( { 'projects': project_list } )
+
+        site_list.append(site_dict)
+
+    return site_list
 
 def get_sites(hours):
     sites_and_ips = []
     resource = 'MATCH_EXP_JOBGLIDEIN_ResourceName'
-    secs_ago = str(time.time() - hours * 60 * 60)
+    secs_ago = time.time() - hours * 60 * 60
 
     crit = { 'JobStartDate': { '$gt': secs_ago } }
-    proj = { resource: 1, '_id': 0, 'StartdPrincipal': 1 }
 
-    for condor_history in coll.find(crit).distinct(resource): # get each unique site
-        site = condor_history.encode('ascii', 'ignore') # convert unicode to ascii
+    # get each unique site
+    for condor_history in coll.find(crit).distinct(resource):
+        # convert unicode to ascii
+        site = condor_history.encode('ascii', 'ignore')
         # sites have multiple different ip address, but they are all at the same place so we only need one
         ip_addr = coll.find_one( { resource: site }, { '_id': 0, 'StartdPrincipal': 1 } )
-        ip_addr = ip_addr['StartdPrincipal'].encode('ascii', 'ignore').split('/', 1)[-1].split("\"", 1)[0] # remove excess chars
+        # remove excess chars from ip addr
+        ip_addr = ip_addr['StartdPrincipal'].encode('ascii', 'ignore').split('/', 1)[-1]
 
         sites_and_ips.append( [site, ip_addr] )
 
@@ -117,9 +102,8 @@ def get_one_site(hours, site):
     crit = { resource: site }
     proj = { '_id': 0, 'StartdPrincipal': 1 }
 
-    ip = coll.find_one(crit, proj).get('StartdPrincipal').encode('ascii', 'ignore').split('/', 1)[-1].split("\"", 1)[0]
+    ip = coll.find_one(crit, proj).get('StartdPrincipal').encode('ascii', 'ignore').split('/', 1)[-1]
     return [site, ip]
-
 
 def application(environ, start_response):
     # parsing query strings
@@ -131,7 +115,6 @@ def application(environ, start_response):
 
     # try to get data for one specified site
     try:
-        site = "\"" + site + "\""
         response_body = json.dumps(query_jobs(hours, [get_one_site(hours, site)]), indent=1)
         one_site = 1
     except Exception:
