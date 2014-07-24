@@ -11,7 +11,7 @@ from concurrent import futures # for processing collectors concurrently
 from ConfigParser import RawConfigParser # for reading from config.ini
 
 # set up mongo collection
-connection = Connection('mc.mwt2.org', 27017)
+connection = Connection('db.mwt2.org', 27017)
 db = connection.visualization_db
 dbc = db.condor_records
 
