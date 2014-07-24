@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# description: pulls data from condor collector
+# 
+# requires yum install python-futures
+ 
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+prog="condor_retrieval.py" 
+PIDFILE="/var/run/condor-collect.pid"
+
+start()
+{
+    [ -f $PIDFILE ] && echo "Already started" && exit
+    echo $"Starting $prog: "
+    cd /usr/local/bin #includes config.ini and condor_retrieval.py
+    $(nohup python /usr/local/bin/condor_retrieval.py > /var/log/condor-daemon.log & echo $! 2>&1 > $PIDFILE)
+    daemon --pidfile $PIDFILE
+    [ -f $PIDFILE ] && success $"$prog startup" || failure $"$prog startup"
+    echo Done.
+}
+ 
+stop()
+{
+        echo -n $"Shutting down $prog: "
+	pid=$(cat /var/run/condor-collect.pid)
+        [ -f $PIDFILE ] && kill $pid || success $"$prog shutdown"
+	rm /var/run/condor-collect.pid
+    	echo 
+}
+ 
+# See how we were called.
+case "$1" in
+  start)
+    start
+        ;;
+  stop)
+    stop
+        ;;
+  restart|reload)
+    stop
+    start
+    ;;
+  status)
+    status $prog
+    ;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|reload}"
+        exit 1
+esac
+ 
+exit 0
