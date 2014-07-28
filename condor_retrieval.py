@@ -11,13 +11,14 @@ from pymongo import database # access mongo database
 from pymongo import collection # access mongo collection
 from concurrent import futures # for processing collectors concurrently
 from ConfigParser import RawConfigParser # for reading from config.ini
+import argparse # for getting config location
 
 # main thread changes this to signal child threads to exit
 exit_flag = False
 
-def config_parse():
+def config_parse(directory):
     conf = RawConfigParser()
-    conf.read('config.ini')
+    conf.read(directory + 'config.ini')
 
     collectors, intervals = [], []
     try:
@@ -118,7 +119,13 @@ def mongo_store(coll, intv, m_coll, classads):
         time.sleep(intv)
 
 def main():
-    ret_list = config_parse() # collectors = ret_list[0], intervals = ret_list[1], collection = ret_list[2], classads = ret_list[3]
+    # get config.ini file location
+    parser = argparse.ArgumentParser()
+    parser.add_argument('directory', help='directory of config.ini')
+    args = parser.parse_args()
+    directory = str(args.directory)
+
+    ret_list = config_parse(directory) # collectors = ret_list[0], intervals = ret_list[1], collection = ret_list[2], classads = ret_list[3]
     global exit_flag
 
     # process each collector in a thread running concurrently with the other threads
