@@ -22,11 +22,55 @@ function getJobs() {
     jQuery.ajax({
                 url: urlAddress,
                 dataType: 'jsonp',
-                success: scope,
+                success: executiveSummary,
                 error: function(jqXHR, textStatus, errort){ console.log(textStatus, errort); console.log(jqXHR); }
                 });
 }
 
+function cellText(cell, text) {
+    var newText = document.createTextNode(text);
+    cell.appendChild(newText);
+}
+
+function rowText(row, user, project, site, jobs, walltime, cputime, efficiency) {
+    //change color -- row.style.backgroundcolor = '#123456';
+    cellText(row.insertCell(0), user, 0);
+    cellText(row.insertCell(1), project, 1);
+    cellText(row.insertCell(2), site, 2);
+    cellText(row.insertCell(3), jobs, 3);
+    cellText(row.insertCell(4), walltime, 4);
+    cellText(row.insertCell(5), cputime, 5);
+    cellText(row.insertCell(6), efficiency, 6);
+}
+
+function executiveSummary(data) {
+    var tableRef = document.getElementById('dataTable');
+    var rows = tableRef.rows.length;
+    var cols = tableRef.rows[0].cells.length;
+
+    var users = Object.keys(data[0]);
+    for(var u = 0; u < users.length; u++) {
+	var user = users[u];
+	var projects = Object.keys(data[0][user]);
+
+	for(var p = 0; p < projects.length; p++) {
+	    var project = projects[p];
+
+	    //ignore this for now
+	    if(project == "User Total")
+		continue;
+
+	    var projectData = data[0][user][project]["Project Total"];
+	    var newRow = tableRef.insertRow(-1);
+	    rowText(newRow, user, project, "Project Total", projectData.jobs, projectData.walltime, projectData.cputime, projectData.efficiency);
+
+	    //Don't do anything with individual sites (yet) because this is executive summary
+	}
+    }
+    sorttable.makeSortable(tableRef); //make table sortable
+}
+
+/*
 function scope(scopeData) {
     var user, project, site;
     var totJobs, curJobs;
@@ -163,3 +207,4 @@ function scope(scopeData) {
     }
     processData(scopeData);
 }
+*/
