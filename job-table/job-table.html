@@ -1,7 +1,5 @@
 <!DOCTYPE HTML>
 
-<!-- TODO: Make table show symbols before it's sorted, add project and site, add total, change numbers to timestamps, add efficiency -->
-
 <html>
   <head>
     <title>Job Table</title>
@@ -23,25 +21,30 @@
 
   <body class="container">
 
+    <h3 align="center">Job Table</h3>
+
     <!-- Control Panel -->
-    <form id="controls" action="" align="center">
+    <form id="controls" method="get" action="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.html" align="center">
       <fieldset>
 	<legend>Control Panel:</legend>
-	Hours: <input type="text" id="hours"><br>
-	User(s): <input type="text" id="hours">
+	Hours: <input type="text" name="hours" id="hours"><br>
+	User(s): <input type="text" name="users" id="users">
       </fieldset>
       <br>
       <input type="submit" id="submit" value="Submit"/>
+      <br><br>
     </form>
-
-    <h3 align="center">Job Table</h3>
 
     <style>
       table {border-collapse: collapse; width: 85%;}
       table,th {text-align: center; }
       th { height: 25px; }
       td { padding: 5px; }
-      fieldset {display: inline; margin: 10px;}
+      fieldset {
+      display: inline;
+      margin: 10px;
+      }
+      legend { font-size:1.1em }
     </style>
 
 
