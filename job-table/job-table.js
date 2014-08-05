@@ -41,7 +41,7 @@ function scope(scopeData) {
         var key2;
 
         switch(type) {
-        case 0:
+        case 0: // User
             key = user;
             if(text == ' ')
                 key2 = 'b';
@@ -51,7 +51,7 @@ function scope(scopeData) {
             cell.setAttribute('sorttable_customkey', key);
             cell.setAttribute('sorttable_customkey2', key2);
             break;
-        case 1:
+        case 1: // Project
             key = project;
             if(text == ' ')
                 key2 = 'b';
@@ -61,7 +61,7 @@ function scope(scopeData) {
             cell.setAttribute('sorttable_customkey', key);
             cell.setAttribute('sorttable_customkey2', key2);
             break;
-        case 2:
+        case 2: // Site
             key = user;
             if(text == 'Project Total')
                 key2 = ' ';
@@ -71,31 +71,31 @@ function scope(scopeData) {
             cell.setAttribute('sorttable_customkey', key);
             cell.setAttribute('sorttable_customkey2', key2);
             break;
-        case 3:
-            key = totJobs;
+        case 3: // Number of Jobs
+            key = totJobs+1;
             key2 = curJobs;
 
             cell.setAttribute('sorttable_customkey', key);
             cell.setAttribute('sorttable_customkey2', key2);
             break;
-        case 4:
+        case 4: // Wall Time
             key = totWall;
             key2 = curWall;
 
             cell.setAttribute('sorttable_customkey', key);
             cell.setAttribute('sorttable_customkey2', key2);
             break;
-        case 5:
+        case 5: // CPU Time
             key = totCpu;
             key2 = curCpu;
 
             cell.setAttribute('sorttable_customkey', key);
             cell.setAttribute('sorttable_customkey2', key2);
             break;
-        case 6:
+        case 6: // CPU Efficiency
             key = totEff;
             if(site == 'Project Total')
-                key2 = '200';
+                key2 = 200;
             else
                 key2 = curEff;
 
@@ -136,9 +136,9 @@ function scope(scopeData) {
                 // Build project total row first
                 var projectData = data[0][user][project]["Project Total"];
                 totJobs = curJobs = projectData.jobs;
-                totWall = projectData.walltime;
-                totCpu = projectData.cputime;
-                totEff = projectData.efficiency;
+                totWall = parseFloat(projectData.walltime);
+                totCpu = parseFloat(projectData.cputime);
+                totEff = parseFloat(projectData.efficiency);
 
                 var newRow = tableRef.insertRow(-1);
                 rowText(newRow, user, project, "Project Total", totJobs, totWall, totCpu, totEff);
@@ -150,9 +150,9 @@ function scope(scopeData) {
 
                     var siteData = data[0][user][project][site];
                     curJobs = siteData.jobs;
-                    curWall = siteData.walltime;
-                    curCpu = siteData.cputime;
-                    curEff = siteData.efficiency;
+                    curWall = parseFloat(siteData.walltime);
+		    curCpu = parseFloat(siteData.cputime);
+		    curEff = parseFloat(siteData.efficiency);
 
                     newRow = tableRef.insertRow(-1);
                     rowText(newRow, " ", " ", site, curJobs, curWall, curCpu, curEff);

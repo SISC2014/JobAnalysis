@@ -4,6 +4,7 @@
 
 <html>
   <head>
+    <title>Job Table</title>
     <meta charset="utf-8" />
 
     <script src="jquery-files/jquery-1.11.1.min.js"></script>
@@ -22,17 +23,29 @@
 
   <body class="container">
 
-    <h3 align="left">Job Table</h3>
+    <!-- Control Panel -->
+    <form id="controls" action="" align="center">
+      <fieldset>
+	<legend>Control Panel:</legend>
+	Hours: <input type="text" id="hours"><br>
+	User(s): <input type="text" id="hours">
+      </fieldset>
+      <br>
+      <input type="submit" id="submit" value="Submit"/>
+    </form>
+
+    <h3 align="center">Job Table</h3>
 
     <style>
       table {border-collapse: collapse; width: 85%;}
       table,th {text-align: center; }
       th { height: 25px; }
       td { padding: 5px; }
+      fieldset {display: inline; margin: 10px;}
     </style>
 
 
-    <table align="left" class="table-bordered table-striped" id=dataTable border=1>
+    <table align="center" class="table-bordered table-striped" id=dataTable border=1>
 
       <!-- dynatable: #006A72, darkish blue-green color -->
       <tr>
