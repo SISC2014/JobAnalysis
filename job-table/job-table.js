@@ -16,7 +16,7 @@ function getParameterByName(name) {
 function getJobs() {
     var hours = getParameterByName('hours');
     var users = getParameterByName('users');
-    var urlAddress = 'http://web-dev.ci-connect.net/~erikhalperin/job-table/job-table.wsgi?hours='.concat(hours).concat(';users=').concat(users);
+    var urlAddress = 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.wsgi?hours='.concat(hours).concat(';users=').concat(users);
     //document.getElementById('test').innerHTML = urlAddress;
 
     jQuery.ajax({
