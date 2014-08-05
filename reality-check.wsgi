@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #Erik Halperin, 07/01/2014
 
+from cgi import parse_qs
 import re # for character removal from strings
 from pymongo import MongoClient # connect to mongodb
 import json # output json document
@@ -13,26 +14,27 @@ coll = db.history_records
 
 def query_wall_time(key):
     # get unique values for key
+
     unique_vals = []
     for val in coll.distinct(key):
         unique_vals.append(val.encode('ascii', 'ignore'))
 
-    curr_time = 1405054800
+    curr_time = 1405382400 # 00:00 GMT, 7/15/14
 
     days = []
     # get data for each day
-    for x in range(0, 8):
+    for x in range(0, 7):
         hi = str(curr_time - x * 3600 * 24)
         lo = str(curr_time - (x+1) * 3600 * 24)
 
         keys = []
-        # get wall times for each user/project/site
+        # get wall times for each user/project/site 
         for val in unique_vals:
-            crit = { 'JobStartDate': { '$gt': lo, '$lt': hi }, key: val }
+            crit = { 'CompletionDate': { '$gte': lo, '$lte': hi }, key: val }
             proj = { 'RemoteWallClockTime': 1, '_id': 0 }
 
             times = coll.find(crit, proj)
-
+            
             # sum wall times
             sum = 0
             for time in times:
@@ -44,15 +46,15 @@ def query_wall_time(key):
                 keys.append({ val: sum })
 
         days.append({ x: keys })
-
+            
     return days
 
 def application(environ, start_response):
+    d = parse_qs(environ['QUERY_STRING'])
+    key = d.get('key', [''])[0]
+    vals = query_wall_time(key)
 
-    #user_vals = query_wall_time('User')
-    project_vals = get_unique_vals('ProjectName')
-
-    response_body = project_vals
+    response_body = vals
 
     response_headers = [('Content-type', 'application/json')]
     status = '200 OK'

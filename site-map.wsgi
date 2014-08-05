@@ -8,7 +8,7 @@ import json # output json document
 import time # for timestamp
 import urllib2 # converting ip address to geo coordinates
 
-import pwd # mapping username to real name from OSG database --> NOT USED CURRENTLY
+# import pwd # mapping username to real name from OSG database
 # ***Accessing OSG database (for usernames) requires the program to run on OSG***
 
 # connect to database
@@ -74,7 +74,7 @@ def query_jobs(hours, sites):
         site_dict.update( { 'projects': project_list } )
 
         site_list.append(site_dict)
-
+    
     return site_list
 
 def get_sites(hours):
@@ -91,12 +91,12 @@ def get_sites(hours):
         # sites have multiple different ip address, but they are all at the same place so we only need one
         ip_addr = coll.find_one( { resource: site }, { '_id': 0, 'StartdPrincipal': 1 } )
         # remove excess chars from ip addr
-        ip_addr = ip_addr['StartdPrincipal'].encode('ascii', 'ignore').split('/', 1)[-1]
-
+        ip_addr = ip_addr['StartdPrincipal'].encode('ascii', 'ignore').split('/', 1)[-1]        
+        
         sites_and_ips.append( [site, ip_addr] )
 
     return sites_and_ips # return package of [site, ip_address]
-
+        
 def get_one_site(hours, site):
     resource = 'MATCH_EXP_JOBGLIDEIN_ResourceName'
     crit = { resource: site }
@@ -104,7 +104,7 @@ def get_one_site(hours, site):
 
     ip = coll.find_one(crit, proj).get('StartdPrincipal').encode('ascii', 'ignore').split('/', 1)[-1]
     return [site, ip]
-
+    
 def application(environ, start_response):
     # parsing query strings
     d = parse_qs(environ['QUERY_STRING'])

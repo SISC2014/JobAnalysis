@@ -1,13 +1,14 @@
-#!/usr/bin/python
 '''
 Created on Jun 19, 2014
 
 @author: Erik Halperin
+
 '''
 
 import re
-
+from cgi import parse_qs
 from pymongo import MongoClient
+import json
 
 #takes a list of dictionaries and returns a list of floats
 def parseList(l):       
@@ -88,24 +89,26 @@ def getEfficiency(username, cluster, site, coll):
         else:
             if(x == 0):
                 zerocount +=1
-            efflist.append(x/y)
+            efflist.append("<p>" + str(x/y) + "</p>")
             totcount += 1
             goodcount +=1
                 
-    return [efflist, goodcount, totcount]
-    
-def main(host, port):
-    client = MongoClient(host, port)
-    db = client.condor_history
-    coll = db.history_records
-    
-
+    return efflist
 
 def application(environ, start_response):
-	output = []
+    d = parse_qs(environ['QUERY_STRING'])
+    host = d.get('host', [''])[0]
+    port = d.get('port', [''])[0]
 
-	response_headers = [('Content-type', 'text/html'), ('Content-Length', str(len(response_body)))]
-	status = '200 OK'
+    response_body = []
 
+    client = MongoClient(host, int(port))
+    db = client.condor_history
+    coll = db.history_records
+    response_body = getEfficiency(None, None, None, coll)
 
-main('mc.mwt2.org', 27017)
+    response_headers = [('Content-type', 'text/html')]
+    status = '200 OK'
+
+    start_response(status, response_headers)
+    return response_body

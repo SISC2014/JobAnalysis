@@ -35,11 +35,11 @@ def get_cds(host):
         lon = res['longitude']
         lat = res['latitude']
         worked = 1
-
-        return [lat, lon]
+    
+	return [lat, lon]
     except Exception:
         pass
-
+    
     # use freegeoip
     if not worked:
         try:
@@ -53,15 +53,10 @@ def get_cds(host):
            return [lat, lon]
         except Exception:
             # if ip address can't be resolved to geo coordinates, return impossible ones to be removed later
-            return [-200, -200]
+	    return [-200, -200]
 
 def modify(job):
-    global user_cache, site_cache, resource_cache, project_cache # ca-ching $$$
-    # convert strings to ints
-    job['JobStartDate'] = int(job['JobStartDate'])
-    job['CompletionDate'] = int(job['CompletionDate'])
-    job['RemoteWallClockTime'] = float(job['RemoteWallClockTime'])
-    job['RemoteUserCpu'] = float(job['RemoteUserCpu'])
+    global user_cache, site_cache, resource_cache, project_cache # ca-ching $$$    
 
     # change User to actual User's name
     username = job['User']
@@ -122,14 +117,14 @@ def modify(job):
 
 def query_jobs(hours):
     jobs = []
-    secs_ago = str(time.time() - hours * 60 * 60)
+    secs_ago = time.time() - hours * 60 * 60
 
     crit = { 'JobStartDate': { '$gt': secs_ago } }
     proj = { 'JobStartDate': 1, 'CompletionDate': 1, 'RemoteWallClockTime': 1, 'RemoteUserCpu': 1, \
-             'StartdPrincipal': 1, 'ProjectName': 1, 'User': 1, 'ClusterId': 1, 'MATCH_EXP_JOBGLIDEIN_ResourceName': 1 }
-
+    	     'StartdPrincipal': 1, 'ProjectName': 1, 'User': 1, 'ClusterId': 1, 'MATCH_EXP_JOBGLIDEIN_ResourceName': 1 }
+    
     for condor_history in coll.find(crit, proj):
-        if 'StartdPrincipal' in condor_history:
+    	if 'StartdPrincipal' in condor_history:
             job = modify(condor_history)
             # if job's lat is -200, could not get coordinates, so remove job
             if job.get('latitude') != -200:
@@ -168,7 +163,7 @@ def error_capture(app):
 
     def wrapper(environ, start_response):
         environ['.contenttype'] = None
-        def wrapped_start_response(status, response_headers):
+        def wrapped_start_response(status, response_headers): 
             for name, value in response_headers:
                 if name.lower() == 'content-type':
                     environ['.contenttype'] = value
