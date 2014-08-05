@@ -5,27 +5,27 @@
 <html>
   <head>
     <meta charset="utf-8" />
-      
-    <script src="jquery-files/jquery-1.11.1.min.js"></script>
-    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script> -->
 
-    <script src="sorttable.js"></script>
+    <script src="jquery-files/jquery-1.11.1.min.js"></script>
+
+    <!-- Javascript for sorting -->
+    <script src="sorttable-mod.js"></script>
 
     <!-- Bootstrap -->
     <link href="bootstrap-files/bootstrap.min.css" rel="stylesheet">
     <link href="bootstrap-files/bootstrap-theme.min.css" rel="stylesheet">
 
-    <!-- CSS file for qtip -->
-    <link type="text/css" rel="stylesheet" href="http://web-dev.ci-connect.net/~erikhalperin/job-table/jquery.qtip.custom/jquery.qtip.css">
+    <!-- CSS file for loading gif and other stuff -->
+    <link href="http://web-dev.ci-connect.net/~erikhalperin/job-table/job-table.css" rel="stylesheet">
 
   </head>
 
   <body class="container">
-    
+
     <h3 align="left">Job Table</h3>
 
     <style>
-      table {border-collapse: collapse; width: 55%;}
+      table {border-collapse: collapse; width: 85%;}
       table,th {text-align: center; }
       th { height: 25px; }
       td { padding: 5px; }
@@ -33,24 +33,25 @@
 
 
     <table align="left" class="table-bordered table-striped" id=dataTable border=1>
-          
+
       <!-- dynatable: #006A72, darkish blue-green color -->
       <tr>
-	<th>User</th>
-	<th>Project</th>
-	<th>Site</th>
-	<th>Number of Jobs</th>
-	<th>Wall Time (hours)</th>
-	<th>CPU Time (hours)</th>
-	<th>Percent efficiency</th>
+        <th>User</th>
+        <th>Project</th>
+        <th>Site</th>
+        <th>Number of Jobs</th>
+        <th>Wall Time (hours)</th>
+        <th>CPU Time (hours)</th>
+        <th>CPU Efficiency (%)</th>
       </tr>
     </table>
 
+    <p id=test></p>
+
     <script src="http://web-dev.ci-connect.net/~erikhalperin/job-table/job-table.js"></script>
-    <script src=""></script> <!-- tooltips.js -->
 
     <p id="test"></p>
-    
+
     <script>
       getJobs();
     </script>
@@ -61,6 +62,8 @@
 
     <!-- include all compile plugins (below) or include individual files as needed -->
     <script src="bootstrap-files/bootstrap.min.js"></script>
+
+    <div class="modal"></div>
 
   </body>
 </html>
