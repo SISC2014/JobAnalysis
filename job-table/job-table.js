@@ -1,112 +1,165 @@
+//Displays loading gif anytime ajax event occurs
+$body = $("body");
+
+$(document).on({
+        ajaxStart: function() { $body.addClass("loading");    },
+            ajaxStop: function() { $body.removeClass("loading"); }
+    });
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
 function getJobs() {
+    var hours = getParameterByName('hours');
+    var users = getParameterByName('users');
+    var urlAddress = 'http://web-dev.ci-connect.net/~erikhalperin/job-table/job-table.wsgi?hours='.concat(hours).concat(';users=').concat(users);
+    //document.getElementById('test').innerHTML = urlAddress;
+
     jQuery.ajax({
-                url: 'http://web-dev.ci-connect.net/~erikhalperin/job-table/job-table.wsgi?hours=48000',
+                url: urlAddress,
                 dataType: 'jsonp',
-                success: processData,
+                success: scope,
                 error: function(jqXHR, textStatus, errort){ console.log(textStatus, errort); console.log(jqXHR); }
                 });
 }
 
-function cellText(cell, text) {
-    var newText = document.createTextNode(text);
-    cell.appendChild(newText);
-}
+function scope(scopeData) {
+    var user, project, site;
+    var totJobs, curJobs;
+    var totWall, curWall;
+    var totCpu, curCpu;
+    var totEff, curEff;
 
-function rowText(row, user, project, site, jobs, walltime, cputime, efficiency) {
-    //change color -- row.style.backgroundcolor = '#123456';
-    cellText(row.insertCell(0), user);
-    cellText(row.insertCell(1), project);
-    cellText(row.insertCell(2), site);
-    cellText(row.insertCell(3), jobs);
-    cellText(row.insertCell(4), walltime);
-    cellText(row.insertCell(5), cputime);
-    cellText(row.insertCell(6), efficiency);
-}
+    function cellText(cell, text, type) {
+        var newText = document.createTextNode(text);
+        cell.appendChild(newText);
+        var key;
+        var key2;
 
-function getName(user) {
-    var len = user.length;
-}
+        switch(type) {
+        case 0:
+            key = user;
+            if(text == ' ')
+                key2 = 'b';
+            else
+                key2 = 'a';
 
-function processData(data) {
-    //document.getElementById('test').innerHTML = Object.keys(data);
+            cell.setAttribute('sorttable_customkey', key);
+            cell.setAttribute('sorttable_customkey2', key2);
+            break;
+        case 1:
+            key = project;
+            if(text == ' ')
+                key2 = 'b';
+            else
+                key2 = 'a';
 
-    var tableRef = document.getElementById('dataTable');
-    var rows = tableRef.rows.length;
-    var cols = tableRef.rows[0].cells.length;
+            cell.setAttribute('sorttable_customkey', key);
+            cell.setAttribute('sorttable_customkey2', key2);
+            break;
+        case 2:
+            key = user;
+            if(text == 'Project Total')
+                key2 = ' ';
+            else
+                key2 = site;
 
-    var users = Object.keys(data[0]);
+            cell.setAttribute('sorttable_customkey', key);
+            cell.setAttribute('sorttable_customkey2', key2);
+            break;
+        case 3:
+            key = totJobs;
+            key2 = curJobs;
 
-    //testing
-    //var ds = users[0]
-    //document.getElementById('test').innerHTML = data[0][ds];
+            cell.setAttribute('sorttable_customkey', key);
+            cell.setAttribute('sorttable_customkey2', key2);
+            break;
+        case 4:
+            key = totWall;
+            key2 = curWall;
 
-    for(var u = 0; u < users.length; u++) {
-        var user = users[u];
-        var projects = Object.keys(data[0][user]);
+            cell.setAttribute('sorttable_customkey', key);
+            cell.setAttribute('sorttable_customkey2', key2);
+            break;
+        case 5:
+            key = totCpu;
+            key2 = curCpu;
 
-        for(var p = 0; p < projects.length; p++) {
-            var project = projects[p];
-            var sites = Object.keys(data[0][user][project]);
+            cell.setAttribute('sorttable_customkey', key);
+            cell.setAttribute('sorttable_customkey2', key2);
+            break;
+        case 6:
+            key = totEff;
+            if(site == 'Project Total')
+                key2 = '200';
+            else
+                key2 = curEff;
 
-            for(var s = 0; s < sites.length; s++) {
+            cell.setAttribute('sorttable_customkey', key);
+            cell.setAttribute('sorttable_customkey2', key2);
+            break;
+        }
+    }
+
+    function rowText(row, localUser, project, site, jobs, walltime, cputime, efficiency) {
+        //change color -- row.style.backgroundcolor = '#123456';
+        cellText(row.insertCell(0), localUser, 0);
+        cellText(row.insertCell(1), project, 1);
+        cellText(row.insertCell(2), site, 2);
+        cellText(row.insertCell(3), jobs, 3);
+        cellText(row.insertCell(4), walltime, 4);
+        cellText(row.insertCell(5), cputime, 5);
+        cellText(row.insertCell(6), efficiency, 6);
+    }
+
+    function processData(data) {
+        var tableRef = document.getElementById('dataTable');
+        var rows = tableRef.rows.length;
+        var cols = tableRef.rows[0].cells.length;
+
+        var users = Object.keys(data[0]);
+
+        for(var u = 0; u < users.length; u++) {
+            user = users[u];
+            var projects = Object.keys(data[0][user]);
+
+            // add try statement for user total
+
+            for(var p = 0; p < projects.length; p++) {
+                project = projects[p];
+                var sites = Object.keys(data[0][user][project]);
+
+                // Build project total row first
+                var projectData = data[0][user][project]["Project Total"];
+                totJobs = curJobs = projectData.jobs;
+                totWall = projectData.walltime;
+                totCpu = projectData.cputime;
+                totEff = projectData.efficiency;
+
                 var newRow = tableRef.insertRow(-1);
-                var site = sites[s];
-                var data2 = data[0][user][project][site];
+                rowText(newRow, user, project, "Project Total", totJobs, totWall, totCpu, totEff);
 
-                if(s == 0) {
-                    //fill user cell and project cell
-                    if(p == 0)
-                        rowText(newRow, user, project, site, data2.jobs, data2.walltime, data2.cputime, data2.efficiency);
-                    //fill only project cell
-                    else
-                        rowText(newRow, "", project, site, data2.jobs, data2.walltime, data2.cputime, data2.efficiency);
-                }
-                else {
-                    //don't fill user or project cell
-                    rowText(newRow, "", "", sites[s], data2.jobs, data2.walltime, data2.cputime, data2.efficiency);
+                for(var s = 0; s < sites.length; s++) {
+                    site = sites[s];
+                    if(site == "Project Total")
+                        continue;
+
+                    var siteData = data[0][user][project][site];
+                    curJobs = siteData.jobs;
+                    curWall = siteData.walltime;
+                    curCpu = siteData.cputime;
+                    curEff = siteData.efficiency;
+
+                    newRow = tableRef.insertRow(-1);
+                    rowText(newRow, " ", " ", site, curJobs, curWall, curCpu, curEff);
                 }
             }
         }
+        sorttable.makeSortable(tableRef); //make table sortable
     }
-    /*
-    for(var r = 1; r < data.length + rows; r++) {
-        var newRow = tableRef.insertRow(r);
-        //change color -- newRow.style.backgroundColor = '#dope';
-        for(var c = 0; c < cols; c++) {
-            var newCell = newRow.insertCell(c);
-            //var link = data[r-1].url; TODO
-            switch(c) {
-            case 0:
-                var user = data[r-1].user;
-                cellText(newCell, user);
-                break;
-            case 1:
-                var proj = data[r-1].user;
-                cellText(newCell, user);
-                break;
-            case 2:
-                var site = data[r-1].user;
-                cellText(newCell, user);
-                break;
-            case 3:
-                var numJobs = data[r-1].jobs;
-                cellText(newCell, numJobs);
-                break;
-            case 4:
-                var wallTime = data[r-1].walltime;
-                cellText(newCell, wallTime);
-                break;
-            case 5:
-                var cpuTime = data[r-1].cputime;
-                cellText(newCell, cpuTime);
-                break;
-            case 6:
-                var efficiency = data[r-1].efficiency;
-                cellText(newCell, efficiency);
-                break;
-            }
-        }
-    }
-    */
-    //sorttable.makeSortable(tableRef); //make table sortable
+    processData(scopeData);
 }
