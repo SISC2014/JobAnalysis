@@ -15,27 +15,31 @@ client = MongoClient('db.mwt2.org', 27017)
 db = client.condor_history
 coll = db.history_records
 
-def query_jobs(hours):
-    job_list = []
+def query_jobs(hours, users):
     resource = '$MATCH_EXP_JOBGLIDEIN_ResourceName'
     secs_ago = time.time() - hours * 60 * 60
 
-    # get only jobs that completed before after secs_ago
-    match = { '$match': { 'CompletionDate': { '$gte': secs_ago } } }
+
+    if users is not None:
+        for index, user in enumerate(users):
+            user = user + '@login01.osgconnect.net'
+            users[index] = { 'User': user }
+
+        # get only jobs that completed before after secs_ago with specified users
+        match = { '$match': { 'CompletionDate': { '$gte': secs_ago }, '$or': users } }
+    else:
+        # get jobs for all users
+        match = { '$match': { 'CompletionDate': { '$gte': secs_ago } } }
+
     # get total wall time, cpu time, & jobs for each user, project, and site
     group = { '$group': { '_id': { 'user': '$User', 'project': '$ProjectName', 'site': resource }, 'walltime': { '$sum': '$RemoteWallClockTime' }, 'cputime': { '$sum': '$RemoteUserCpu' }, 'jobs': { '$sum': 1 } } }
 
     entries = coll.aggregate([match, group])
 
-    # return entries
-
-    user_list = []
-    project_list = []
-    site_list = []
+    total_list = []
     user_cache = {}
 
     # for debugging
-    the_list = []
     missed_jobs = 0
     entry_count = 0
 
@@ -58,16 +62,13 @@ def query_jobs(hours):
             continue
 
         if user not in user_cache:
-            user_list.append(user)
             user_cache.update( { user: {} } )
 
         if project not in user_cache.get(user):
-            project_list.append(project)
-            user_cache.get(user).update( { project: {} } ) #lower
+            user_cache.get(user).update( { project: {} } )
 
         # should always enter this if statment
-        if site not in user_cache.get(user).get(project): #lower
-            site_list.append(site)
+        if site not in user_cache.get(user).get(project):
             # compute wall & cpu time in hours
             wt = entry['walltime'] / 60 / 60
             ct = entry['cputime'] / 60 / 60
@@ -82,45 +83,55 @@ def query_jobs(hours):
 
             user_cache.get(user).get(project).update( { site: { 'efficiency': eff, 'walltime': wt, 'cputime': ct, 'jobs': entry['jobs'] } } )
 
-    the_list.append(user_cache)
-    the_list.append({'missed': missed_jobs})
-    the_list.append({'entries': entry_count})
-    return the_list
+    # Create totals for each user and each project
+    user_list = user_cache.keys()
+    for user in user_list:
+        user_eff_total, user_wall_total, user_cpu_total, user_jobs_total = 0, 0, 0, 0
+        project_list = user_cache.get(user).keys()
 
-    '''for entry in entries["result"]:
-        # convert username to user's name
-        username = entry["_id"].split('@', 1)[0]
-        username = pwd.getpwnam(username)
+        for project in project_list:
+           project_eff_total, project_wall_total, project_cpu_total, project_jobs_total = 0, 0, 0, 0
+           site_list = user_cache.get(user).get(project).keys()
 
-        if username.pw_gecos != "":
-            entry["_id"] = username.pw_gecos
+           for site in site_list:
+               access = user_cache.get(user).get(project).get(site)
 
-        # compute wall & cpu time in hours
-        wt = entry['walltime'] / 60 / 60
-        ct = entry['cputime'] / 60 / 60
+               project_eff_total += float(access.get('efficiency')) / len(site_list)
+               project_wall_total += float(access.get('walltime'))
+               project_cpu_total += float(access.get('cputime'))
+               project_jobs_total += float(access.get('jobs'))
 
-        # format to two decimal places
-        entry['walltime'] = "{0:.2f}".format(wt)
-        entry['cputime'] = "{0:.2f}".format(ct)
+           # Get each project total
+           project_data = { 'Project Total': { 'efficiency': "{0:.2f}".format(project_eff_total), 'walltime': "{0:.2f}".format(project_wall_total), 'cputime': "{0:.2f}".format(project_cpu_total), 'jobs': project_jobs_total } }
 
-        # change _id to user
-        entry['user'] = entry.pop('_id')
+           user_cache.get(user).get(project).update(project_data)
 
-        # calculate efficiency: cpu time / wall time
-        eff = 100 * ct / wt
-        entry.update( { 'efficiency': "{0:.2f}".format(eff) } )
+           user_eff_total += project_eff_total / len(project_list)
+           user_wall_total += project_wall_total
+           user_cpu_total += project_cpu_total
+           user_jobs_total += project_jobs_total
 
-        job_list.append(entry)
+        # Only have a user total if there are multiple projects
+        if len(project_list) > 1:
+            user_cache.get(user).update( { 'User Total': { ' ':  { 'efficiency': "{0:.2f}".format(user_eff_total), 'walltime': "{0:.2f}".format(user_wall_total), 'cputime': "{0:.2f}".format(user_cpu_total), 'jobs': user_jobs_total } } } )
 
-    return job_list'''
+    total_list.append(user_cache)
+    total_list.append({'missed': missed_jobs})
+    total_list.append({'entries': entry_count})
+    return total_list
 
 def application(environ, start_response):
     # parse url parameters
     d = parse_qs(environ['QUERY_STRING'])
     hours = int(d.get('hours', [''])[0])
+    users = d.get('users', [''])[0]
     callback = d.get('callback', [''])[0]
 
-    response_body = json.dumps(query_jobs(hours), indent=2)
+    if users != "":
+        response_body = json.dumps(query_jobs(hours, users.split(',')), indent=2)
+    else:
+        response_body = json.dumps(query_jobs(hours, None), indent=2)
+
     status = '200 OK'
 
     # first try returning jsonp if callback function is included
