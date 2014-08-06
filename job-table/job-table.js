@@ -33,7 +33,7 @@ function getJobs() {
     jQuery.ajax({
                 url: urlAddress,
                 dataType: 'jsonp',
-                success: dataHandler,
+                success: totalSummary,
                 error: function(jqXHR, textStatus, errort){ console.log(textStatus, errort); console.log(jqXHR); }
                 });
 }
@@ -55,7 +55,11 @@ function rowText(row, user, project, site, jobs, walltime, cputime, efficiency) 
 }
 
 function totalSummary(data) {
+    dataGlobal = data;
+ 
     var tableRef = document.getElementById('dataTable');
+    // tbodyRef - for inserting rows into tbody instead of the table itself
+    var tbodyRef = tableRef.getElementsByTagName('tbody')[0];
     var rows = tableRef.rows.length;
     var cols = tableRef.rows[0].cells.length;
 
@@ -72,29 +76,35 @@ function totalSummary(data) {
 		continue;
 
 	    var projectData = data[0][user][project]["Project Total"];
-	    var newRow = tableRef.insertRow(-1);
+	    var newRow = tbodyRef.insertRow(-1);
 	    rowText(newRow, user, project, "Project Total", projectData.jobs, projectData.walltime, projectData.cputime, projectData.efficiency);
 
 	    //Don't do anything with individual sites (yet) because this is executive summary
 	}
     }
-    sorttable.makeSortable(tableRef); //make table sortable
+    sorttable.makeSortable(tableRef);
 }
 
 function userTable() {
     // First get users from text box
     var users = document.getElementById('users-input').value;
-    users = users.replace(/ /g, '').split(",");
+    users = users.split(",");
 
-    // TODO --- Delete all tbody rows in existing table
-
-    // Construct table
+    if(users == 'all')
+	users = Object.keys(dataGlobal[0]);
+    
     var tableRef = document.getElementById('dataTable');
+    var tbodyRef = tableRef.getElementsByTagName('tbody')[0];
     var rows = tableRef.rows.length;
     var cols = tableRef.rows[0].cells.length;
 
+    // Remove all rows in tbody
+    $(tbodyRef).empty();
+
+    // Construct table
     for(var u = 0; u < users.length; u++) {
-	var user = users[u];
+	var user = users[u].trim();
+
 	var projects = Object.keys(dataGlobal[0][user]);
 	
 	for(var p = 0; p < projects.length; p++) {
@@ -106,7 +116,7 @@ function userTable() {
 
 	    // Build project total row first
             var projectData = dataGlobal[0][user][project]["Project Total"];
-            var newRow = tableRef.insertRow(-1);
+            var newRow = tbodyRef.insertRow(-1);
             rowText(newRow, user, project, "Project Total", projectData.jobs, projectData.walltime, projectData.cputime, projectData.efficiency);
 
 	    var sites = Object.keys(dataGlobal[0][user][project]);
@@ -117,20 +127,15 @@ function userTable() {
 		    continue;
 
 		var siteData = dataGlobal[0][user][project][site];
-
-
-	    
+		newRow = tbodyRef.insertRow(-1);
+		rowText(newRow, " ", " ", site, siteData.jobs, siteData.walltime, siteData.cputime, siteData.efficiency);		
+	    }
 	}
     }
+    sorttable.makeSortable(tableRef);
 }
 
-/*
-function scope(scopeData) {
-    var user, project, site;
-    var totJobs, curJobs;
-    var totWall, curWall;
-    var totCpu, curCpu;
-    var totEff, curEff;
+/* Sorting stuff that may or may not be used:
 
     function cellText(cell, text, type) {
         var newText = document.createTextNode(text);
@@ -203,62 +208,4 @@ function scope(scopeData) {
         }
     }
 
-    function rowText(row, localUser, project, site, jobs, walltime, cputime, efficiency) {
-        //change color -- row.style.backgroundcolor = '#123456';
-        cellText(row.insertCell(0), localUser, 0);
-        cellText(row.insertCell(1), project, 1);
-        cellText(row.insertCell(2), site, 2);
-        cellText(row.insertCell(3), jobs, 3);
-        cellText(row.insertCell(4), walltime, 4);
-        cellText(row.insertCell(5), cputime, 5);
-        cellText(row.insertCell(6), efficiency, 6);
-    }
-
-    function processData(data) {
-        var tableRef = document.getElementById('dataTable');
-        var rows = tableRef.rows.length;
-        var cols = tableRef.rows[0].cells.length;
-
-        var users = Object.keys(data[0]);
-
-        for(var u = 0; u < users.length; u++) {
-            user = users[u];
-            var projects = Object.keys(data[0][user]);
-
-            // add try statement for user total
-
-            for(var p = 0; p < projects.length; p++) {
-                project = projects[p];
-                var sites = Object.keys(data[0][user][project]);
-
-                // Build project total row first
-                var projectData = data[0][user][project]["Project Total"];
-                totJobs = curJobs = projectData.jobs;
-                totWall = parseFloat(projectData.walltime);
-                totCpu = parseFloat(projectData.cputime);
-                totEff = parseFloat(projectData.efficiency);
-
-                var newRow = tableRef.insertRow(-1);
-                rowText(newRow, user, project, "Project Total", totJobs, totWall, totCpu, totEff);
-
-                for(var s = 0; s < sites.length; s++) {
-                    site = sites[s];
-                    if(site == "Project Total")
-                        continue;
-
-                    var siteData = data[0][user][project][site];
-                    curJobs = siteData.jobs;
-                    curWall = parseFloat(siteData.walltime);
-		    curCpu = parseFloat(siteData.cputime);
-		    curEff = parseFloat(siteData.efficiency);
-
-                    newRow = tableRef.insertRow(-1);
-                    rowText(newRow, " ", " ", site, curJobs, curWall, curCpu, curEff);
-                }
-            }
-        }
-        sorttable.makeSortable(tableRef); //make table sortable
-    }
-    processData(scopeData);
-}
 */
