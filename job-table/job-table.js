@@ -33,7 +33,7 @@ function getJobs() {
     jQuery.ajax({
                 url: urlAddress,
                 dataType: 'jsonp',
-                success: totalSummary,
+                success: dataHandler,
                 error: function(jqXHR, textStatus, errort){ console.log(textStatus, errort); console.log(jqXHR); }
                 });
 }
@@ -41,11 +41,6 @@ function getJobs() {
 function cellText(cell, text) {
     var newText = document.createTextNode(text);
     cell.appendChild(newText);
-}
-
-function theAlert() {
-    var input = document.getElementById('users-input');
-    alert(input.value);
 }
 
 function rowText(row, user, project, site, jobs, walltime, cputime, efficiency) {
@@ -84,6 +79,49 @@ function totalSummary(data) {
 	}
     }
     sorttable.makeSortable(tableRef); //make table sortable
+}
+
+function userTable() {
+    // First get users from text box
+    var users = document.getElementById('users-input').value;
+    users = users.replace(/ /g, '').split(",");
+
+    // TODO --- Delete all tbody rows in existing table
+
+    // Construct table
+    var tableRef = document.getElementById('dataTable');
+    var rows = tableRef.rows.length;
+    var cols = tableRef.rows[0].cells.length;
+
+    for(var u = 0; u < users.length; u++) {
+	var user = users[u];
+	var projects = Object.keys(dataGlobal[0][user]);
+	
+	for(var p = 0; p < projects.length; p++) {
+	    var project = projects[p];
+
+	    //ignore this for now
+            if(project == "User Total")
+                continue;
+
+	    // Build project total row first
+            var projectData = dataGlobal[0][user][project]["Project Total"];
+            var newRow = tableRef.insertRow(-1);
+            rowText(newRow, user, project, "Project Total", projectData.jobs, projectData.walltime, projectData.cputime, projectData.efficiency);
+
+	    var sites = Object.keys(dataGlobal[0][user][project]);
+
+	    for(var s = 0; s < sites.length; s++) {
+		site = sites[s];
+		if(site == "Project Total")
+		    continue;
+
+		var siteData = dataGlobal[0][user][project][site];
+
+
+	    
+	}
+    }
 }
 
 /*
