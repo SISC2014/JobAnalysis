@@ -6,6 +6,9 @@ $(document).on({
             ajaxStop: function() { $body.removeClass("loading"); }
     });
 
+/* The following is javascript for getting data from a wsgi and displaying it correctly */
+
+// Gets parameters from url address
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
@@ -13,16 +16,24 @@ function getParameterByName(name) {
     return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
+// Store data as global var so that multiple functions can access it
+var dataGlobal;
+function dataHandler(data) { dataGlobal = data; }
+
+// Retrieve data from url and execute dataHandler on success
 function getJobs() {
     var hours = getParameterByName('hours');
-    var users = getParameterByName('users');
-    var urlAddress = 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.wsgi?hours='.concat(hours).concat(';users=').concat(users);
-    //document.getElementById('test').innerHTML = urlAddress;
+    
+    // Default is 48 hours
+    if(hours == "")
+	hours = 48;
+
+    var urlAddress = 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.wsgi?hours='.concat(hours);
 
     jQuery.ajax({
                 url: urlAddress,
                 dataType: 'jsonp',
-                success: executiveSummary,
+                success: totalSummary,
                 error: function(jqXHR, textStatus, errort){ console.log(textStatus, errort); console.log(jqXHR); }
                 });
 }
@@ -30,6 +41,11 @@ function getJobs() {
 function cellText(cell, text) {
     var newText = document.createTextNode(text);
     cell.appendChild(newText);
+}
+
+function theAlert() {
+    var input = document.getElementById('users-input');
+    alert(input.value);
 }
 
 function rowText(row, user, project, site, jobs, walltime, cputime, efficiency) {
@@ -43,7 +59,7 @@ function rowText(row, user, project, site, jobs, walltime, cputime, efficiency) 
     cellText(row.insertCell(6), efficiency, 6);
 }
 
-function executiveSummary(data) {
+function totalSummary(data) {
     var tableRef = document.getElementById('dataTable');
     var rows = tableRef.rows.length;
     var cols = tableRef.rows[0].cells.length;
