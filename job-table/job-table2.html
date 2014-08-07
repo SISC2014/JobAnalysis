@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+
+<html>
+  <head>
+    <title>Job Table</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+    <!-- JS files for jquery -->
+    <script src="jquery-files/jquery-1.11.1.min.js"></script>
+
+    <!-- JS and CSS files for table sorting -->
+    <script src="http://www.pengoworks.com/workshop/jquery/tablesorter/jquery.tablesorter.mod.js"></script>
+    <link href="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/blue/style.css" rel="stylesheet">
+    <script src="http://www.pengoworks.com/workshop/jquery/tablesorter/jquery.tablesorter.collapsible.js"></script>
+    <script src="http://www.pengoworks.com/workshop/jquery/tablesorter/jquery.tablesorter.pager.js"></script>
+
+
+    <!-- Bootstrap -->
+    <link href="bootstrap-files/bootstrap.min.css" rel="stylesheet">
+    <link href="bootstrap-files/bootstrap-theme.min.css" rel="stylesheet">
+
+    <!-- CSS file for loading gif and other stuff -->
+    <link href="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.css" rel="stylesheet">
+
+  </head>
+
+  <body class="container">
+
+    <h3 align="center">Job Table</h3>
+
+    <!-- Control Panel
+    <div class="control-panel">
+      <form id="hours-form" method="get" action="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.html" align="center">
+	Hours: <input type="text" name="hours" id="hours-input"><br>
+	<br>
+	<input type="submit" id="hours-submit" value="Submit"/>
+	<br><br>
+      </form>
+
+      <form id="users-form" align="center">
+	User(s): <input type="text" id="users-input"><br>
+	<br>
+	<input type="button" id="users-submit" value="Submit" onclick="userTable()"/>
+	<br><br>
+      </form>
+    </div> -->
+
+    <table align="center" class="tablesorter table-striped" id=dataTable border=0>
+      <!-- dynatable: #006A72, darkish blue-green color -->
+      <thead>
+	<tr>
+	  <th style="padding: 0; margin: 0;"></th>
+          <th>User</th>
+          <th>Project</th>
+          <th>Site</th>
+          <th>Number of Jobs</th>
+          <th>Wall Time (hours)</th>
+          <th>CPU Time (hours)</th>
+          <th>CPU Efficiency (%)</th>
+	  </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+    <p id=test></p>
+
+    <script src="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table2.js"></script>
+
+    <script>
+      getJobs();
+    </script>
+
+    <!-- include all compile plugins (below) or include individual files as needed -->
+    <script src="bootstrap-files/bootstrap.min.js"></script>
+
+    <div class="modal"></div>
+
+  </body>
+</html>
