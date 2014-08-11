@@ -8,12 +8,9 @@
     <!-- JS files for jquery -->
     <script src="jquery-files/jquery-1.11.1.min.js"></script>
 
-    <!-- JS and CSS files for table sorting -->
-    <script src="http://www.pengoworks.com/workshop/jquery/tablesorter/jquery.tablesorter.mod.js"></script>
-    <link href="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/blue/style.css" rel="stylesheet">
-    <script src="http://www.pengoworks.com/workshop/jquery/tablesorter/jquery.tablesorter.collapsible.js"></script>
-    <script src="http://www.pengoworks.com/workshop/jquery/tablesorter/jquery.tablesorter.pager.js"></script>
-
+    <!-- DataTables files -->
+    <script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+    <link href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css" rel="stylesheet">
 
     <!-- Bootstrap -->
     <link href="bootstrap-files/bootstrap.min.css" rel="stylesheet">
@@ -28,28 +25,11 @@
 
     <h3 align="center">Job Table</h3>
 
-    <!-- Control Panel
-    <div class="control-panel">
-      <form id="hours-form" method="get" action="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.html" align="center">
-	Hours: <input type="text" name="hours" id="hours-input"><br>
-	<br>
-	<input type="submit" id="hours-submit" value="Submit"/>
-	<br><br>
-      </form>
-
-      <form id="users-form" align="center">
-	User(s): <input type="text" id="users-input"><br>
-	<br>
-	<input type="button" id="users-submit" value="Submit" onclick="userTable()"/>
-	<br><br>
-      </form>
-    </div> -->
-
-    <table align="center" class="tablesorter table-striped" id=dataTable border=0>
+    <table align="center" class="display" cellspacing="0" width="100%" id=myTable border=0>
       <!-- dynatable: #006A72, darkish blue-green color -->
       <thead>
 	<tr>
-	  <th style="padding: 0; margin: 0;"></th>
+	  <!--<th></th>-->
           <th>User</th>
           <th>Project</th>
           <th>Site</th>
@@ -65,7 +45,7 @@
 
     <p id=test></p>
 
-    <script src="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table2.js"></script>
+    <script src="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table3.js"></script>
 
     <script>
       getJobs();
