@@ -15,10 +15,33 @@ client = MongoClient('db.mwt2.org', 27017)
 db = client.condor_history
 coll = db.history_records
 
+def modify_dict(d):
+    d_list = []
+
+    # iterate over each key (user)
+    for user_key in d.keys():
+        d_user = { 'user': user_key, 'projects': [] }
+        
+        # iterate over each project key
+        for project_key in d[user_key].keys():
+            d_project = { 'project': project_key, 'sites': [] }
+            
+            # iterate over each site
+            for site_key in d[user_key][project_key].keys():
+                site = d[user_key][project_key][site_key]
+
+                d_site = {'site':site_key, 'efficiency':site['efficiency'], 'jobs':site['jobs'], 'cputime':site['cputime'], 'walltime':site['walltime']}
+                d_project['sites'].append(d_site)
+                
+            d_user['projects'].append(d_project)
+
+        d_list.append(d_user)
+
+    return d_list
+
 def query_jobs(hours, users):
     resource = '$MATCH_EXP_JOBGLIDEIN_ResourceName'
     secs_ago = time.time() - hours * 60 * 60
-
 
     if users is not None:
         for index, user in enumerate(users):
@@ -36,6 +59,9 @@ def query_jobs(hours, users):
 
     entries = coll.aggregate([match, group])
 
+    # Entries is a series of dictionaries where each one is a uniqe combination of a project, user, and site
+    # We want each user to have a list of projects that each have a list of sites
+
     total_list = []
     user_cache = {}
 
@@ -49,6 +75,7 @@ def query_jobs(hours, users):
         user = entry.get('_id').get('user')
         site = entry.get('_id').get('site')
 
+        # change username to user's name
         name = user.split('@', 1)[0]
         name = pwd.getpwnam(name)
         name = name.pw_gecos
@@ -56,7 +83,7 @@ def query_jobs(hours, users):
         if name != "":
             user = name
 
-        # sometimes jobs don't have a project or site, so entries without a job/site should be discarded
+        # sometimes jobs don't have a project or site, so entries without a project/site should be discarded
         if project is None or site is None:
             missed_jobs += 1
             continue
@@ -75,11 +102,11 @@ def query_jobs(hours, users):
 
             # calculate efficiency: cpu time / wall time
             eff = 100 * ct / wt
-            eff = "{0:.2f}".format(eff)
+            eff = "{0:.1f}".format(eff)
 
             # format to two decimal places
-            wt = "{0:.2f}".format(wt)
-            ct = "{0:.2f}".format(ct)
+            wt = "{0:.1f}".format(wt)
+            ct = "{0:.1f}".format(ct)
 
             user_cache.get(user).get(project).update( { site: { 'efficiency': eff, 'walltime': wt, 'cputime': ct, 'jobs': entry['jobs'] } } )
 
@@ -102,7 +129,7 @@ def query_jobs(hours, users):
                project_jobs_total += float(access.get('jobs'))
 
            # Get each project total
-           project_data = { 'Project Total': { 'efficiency': "{0:.2f}".format(project_eff_total), 'walltime': "{0:.2f}".format(project_wall_total), 'cputime': "{0:.2f}".format(project_cpu_total), 'jobs': project_jobs_total } }
+           project_data = { 'Project Total': { 'efficiency': "{0:.1f}".format(project_eff_total), 'walltime': "{0:.1f}".format(project_wall_total), 'cputime': "{0:.1f}".format(project_cpu_total), 'jobs': project_jobs_total } }
 
            user_cache.get(user).get(project).update(project_data)
 
@@ -113,7 +140,7 @@ def query_jobs(hours, users):
 
         # Only have a user total if there are multiple projects
         if len(project_list) > 1:
-            user_cache.get(user).update( { 'User Total': { ' ':  { 'efficiency': "{0:.2f}".format(user_eff_total), 'walltime': "{0:.2f}".format(user_wall_total), 'cputime': "{0:.2f}".format(user_cpu_total), 'jobs': user_jobs_total } } } )
+            user_cache.get(user).update( { 'User Total': { ' ':  { 'efficiency': "{0:.1f}".format(user_eff_total), 'walltime': "{0:.1f}".format(user_wall_total), 'cputime': "{0:.1f}".format(user_cpu_total), 'jobs': user_jobs_total } } } )
 
     total_list.append(user_cache)
     total_list.append({'missed': missed_jobs})
@@ -128,23 +155,20 @@ def application(environ, start_response):
     callback = d.get('callback', [''])[0]
 
     if users != "":
-        response_body = json.dumps(query_jobs(hours, users.split(',')), indent=2)
+        response_body = query_jobs(hours, users.split(','))
+        response_body = json.dumps(response_body, indent=2)
     else:
-        response_body = json.dumps(query_jobs(hours, None), indent=2)
+        response_body = query_jobs(hours, None)
+
+        response_body = modify_dict(response_body[0])
+
+        response_body = json.dumps(response_body, indent=2)
 
     status = '200 OK'
 
-    # first try returning jsonp if callback function is included
-    try:
-        response_headers = [('Content-type', 'application/javascript')]
-        response_body = callback + '(' + response_body + ');'
-        start_response(status, response_headers)
-        return response_body
-    except Exception:
-        pass
-
-    # otherwise return json
-    response_headers = [('Content-type', 'application/json')]
+    # return jsonp with callback
+    response_headers = [('Content-type', 'application/javascript')]
+    response_body = callback + '(' + response_body + ');'
     start_response(status, response_headers)
 
     return response_body
