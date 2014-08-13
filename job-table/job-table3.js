@@ -77,7 +77,7 @@ function dataHandler() {
 		});
 
 	    // Add listener event for opening and closing details
-	    $('#summaryTable tbody td img').live('click', function () {
+	    $(document).on('click', '#summaryTable tbody td img', function () {
 		    var nTr = $(this).parents('tr')[0];
 		    var nTds = this;
 		    
@@ -92,7 +92,7 @@ function dataHandler() {
 			// var detailsRowData = newRowData [rowIndex].details;
 
 			this.src = "http://i.imgur.com/d4ICC.png";
-			oTable.fnOpen(nTr, fnFormatDetails(iTableCounter, detailsTableHtml), 'details');
+			//oTable.fnOpen(nTr, fnFormatDetails(iTableCounter, detailsTableHtml), 'details');
 
 			oInnerTable = $("#exampleTable_" + iTableCounter).dataTable({
 				"bJQueryUI": true,
