@@ -15,44 +15,36 @@ client = MongoClient('db.mwt2.org', 27017)
 db = client.condor_history
 coll = db.history_records
 
-def query_jobs(hours):
+def query_jobs(hours, user):
+    resource = '$MATCH_EXP_JOBGLIDEIN_ResourceName'
     secs_ago = time.time() - hours * 60 * 60
 
-    match = { '$match': { 'CompletionDate': { '$gte': secs_ago } } }
-    group = { '$group': { '_id': { 'user': '$User', 'project': '$ProjectName'}, 'walltime': { '$sum': '$RemoteWallClockTime' }, 'cputime': { '$sum': '$RemoteUserCpu' }, 'jobs': { '$sum': 1 } } }
+    user = user + '@login01.osgconnect.net'
+
+    match = { '$match': { 'CompletionDate': { '$gte': secs_ago }, 'User': user } }
+    group = { '$group': { '_id': resource, 'walltime': { '$sum': '$RemoteWallClockTime' }, 'cputime': { '$sum': '$RemoteUserCpu' }, 'jobs': { '$sum': 1 } } }
 
     entries = coll.aggregate([match, group])
 
     ret_list = []
 
     for entry in entries['result']:
-        # sometimes jobs don't have a project, so entries without a project should be skipped (for now)
-        try:
-            # change username to user's name
-            user = entry['_id']['user']
-            name = user.split('@', 1)[0]
-            name = pwd.getpwnam(name)
-            name = name.pw_gecos
-            
-            # if user doesn't have name, use their username
-            if name != "":
-                user = name
+        # if site is null, skip the entry
+        if entry['_id'] is None:
+            continue
 
-            # calculate efficiency
-            wt = entry['walltime'] / 60 / 60
-            ct = entry['cputime'] / 60 / 60
-            eff = 100 * ct / wt
+        # calculate efficiency
+        wt = entry['walltime'] / 60 / 60
+        ct = entry['cputime'] / 60 / 60
+        eff = 100 * ct / wt
+        
+        # format numbers to 1 decimal place
+        eff = "{0:.1f}".format(eff)
+        wt = "{0:.1f}".format(wt)
+        ct = "{0:.1f}".format(ct)
 
-            # format numbers to 1 decimal place
-            eff = "{0:.1f}".format(eff)
-            wt = "{0:.1f}".format(wt)
-            ct = "{0:.1f}".format(ct)
-            
-            # include username
-            d = { 'username': entry['_id']['user'], 'user': user, 'project': entry['_id']['project'], 'jobs': entry['jobs'], 'walltime': wt, 'cputime': ct, 'efficiency': eff }
-            ret_list.append(d)
-        except Exception:
-            pass
+        d = { 'site': entry['_id'], 'jobs': entry['jobs'], 'walltime': wt, 'cputime': ct, 'efficiency': eff }
+        ret_list.append(d)
 
     return { 'data': ret_list }
 
@@ -60,10 +52,12 @@ def application(environ, start_response):
     # parse url parameters
     d = parse_qs(environ['QUERY_STRING'])
     hours = int(d.get('hours', [''])[0])
+    user = d.get('user', [''])[0]
 
     status = '200 OK'
 
-    response_body = json.dumps(query_jobs(hours), indent=2)
+    response_body = []
+    response_body = json.dumps(query_jobs(hours, user), indent=2)
 
     # return jsonp with callback
     response_headers = [('Content-type', 'application/javascript')]

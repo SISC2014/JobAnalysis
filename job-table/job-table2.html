@@ -25,26 +25,41 @@
 
     <h3 align="center">Job Table</h3>
 
-    <table align="center" class="display" cellspacing="0" width="100%" id=myTable border=0>
+    <table align="center" class="display" cellspacing="0" width="100%" id="summaryTable" border="0">
       <!-- dynatable: #006A72, darkish blue-green color -->
       <thead>
 	<tr>
 	  <!--<th></th>-->
           <th>User</th>
           <th>Project</th>
-          <th>Site</th>
           <th>Number of Jobs</th>
           <th>Wall Time (hours)</th>
           <th>CPU Time (hours)</th>
           <th>CPU Efficiency (%)</th>
+	  <th>Username</th>
 	  </tr>
       </thead>
       <tbody>
       </tbody>
     </table>
 
-    <p id=test></p>
+    <div style="display:none">
+      <table id="childTable">
+	<thead>
+	  <tr>
+	    <th>Site</th>
+	    <th>Number of Jobs</th>
+            <th>Wall Time (hours)</th>
+            <th>CPU Time (hours)</th>
+            <th>CPU Efficiency (%)</th>
+	  </tr>
+	</thead>
+	<tbody>
+	</tbody>
+      </table>
+    </div>
 
+    <!-- JS file for loading data from wsgi -->
     <script src="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table3.js"></script>
 
     <script>

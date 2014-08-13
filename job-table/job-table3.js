@@ -35,6 +35,13 @@ function getJobs() {
 }
 
 // Taken from http://stackoverflow.com/questions/11841486/datatables-drill-down-rows-with-nested-independent-table
+function fnFormatDetails(tableId, html) {
+    var sOut = "<table id=\"summaryTable_" + tableId + "\">";
+    sOut += html;
+    sOut += "</table>";
+    return sOut;
+}
+
 function dataHandler() {
     var iTableCounter = 1;
     var oTable, oInnerTable, detailsTableHtml;
@@ -65,21 +72,24 @@ function dataHandler() {
 	                          {
 		                      "mDataProp": null,
 		                      "sClass": "control center",
-		                      "sDefaultContent": '<img src="http://i.imgur.com/SD7Dz.png">'
+		                      "sDefaultContent": '<img src="http://i.imgur.com/SD7Dz.png">',
+				      "bSortable": false
 	                          },
 	                          { "data": "user" },
 	                          { "data": "project" },
 	                          { "data": "jobs" },
 	                          { "data": "walltime" },
 	                          { "data": "cputime" },
-	                          { "data": "efficiency" }
-				],
+	                          { "data": "efficiency" },
+	                          { "data": "username", "visible": false } // In order to submit username to wsgi in child
+				 ]
 		});
 
 	    // Add listener event for opening and closing details
 	    $(document).on('click', '#summaryTable tbody td img', function () {
 		    var nTr = $(this).parents('tr')[0];
 		    var nTds = this;
+		    // var username = TODO
 		    
 		    if(oTable.fnIsOpen(nTr)) {
 			// Close row
@@ -89,27 +99,25 @@ function dataHandler() {
 		    else {
 			// Open row
 			var rowIndex = oTable.fnGetPosition( $(nTds).closest('tr')[0] );
-			// var detailsRowData = newRowData [rowIndex].details;
-
+			
 			this.src = "http://i.imgur.com/d4ICC.png";
-			//oTable.fnOpen(nTr, fnFormatDetails(iTableCounter, detailsTableHtml), 'details');
+			oTable.fnOpen(nTr, fnFormatDetails(iTableCounter, detailsTableHtml), 'details');
 
-			oInnerTable = $("#exampleTable_" + iTableCounter).dataTable({
+			oInnerTable = $("#summaryTable_" + iTableCounter).dataTable({
 				"bJQueryUI": true,
 				"bFilter": false,
-				// data
-				"bSort": true,
-				"Columns": [
-			{ "data": "site" },
-			{ "data": "jobs" },
-			{ "data": "walltime" },
-			{ "data": "cputime" },
-			{ "data": "efficiency" }
-					    ],
+				"ajax": 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/single-user.wsgi?hours=24;user=jenkins@login01.osgconnect.net',
+				"aoColumns": [
+			                      { "data": "site" },
+			                      { "data": "jobs" },
+		              	              { "data": "walltime" },
+			                      { "data": "cputime" },
+			                      { "data": "efficiency" }
+					     ],
 				"bPaginate": false
 			    });
 			iTableCounter = iTableCounter + 1;
-		    }
+		    } 
 		    });
 	});
 }
