@@ -42,8 +42,64 @@ table.tablesorter tr.expand-child td {
     display: none;
 }
 
-/* Expanding/collapsing child rows */
-table.tablesorter .collapsible {
+/* use the below style below to hide the collapsed rows via CSS, you must also set the showCollapsed setting to true */
+/*
+  table.grid tr.expand-child td {
+  display: none;
+  }
+  */
+
+table.grid th {
+    color: #565770;
+    padding: 4px 16px 4px 0;
+    cursor: pointer;
+} 
+
+table.grid td {
+    color: #565770;
+    padding: 4px 6px;
+}
+
+table.grid th.headerSortUp {
+    background: #e6edc1 url(./tablesorter_bkgrd.png) no-repeat 100% -80px;
+}
+
+table.grid th.headerSortUp span {
+    background: #e6edc1 url(./tablesorter_bkgrd.png) no-repeat 0 -80px;
+}
+
+table.grid th.headerSortDown {
+    background: #e6edc1 url(./tablesorter_bkgrd.png) no-repeat 100% 2px;
+}
+
+table.grid th.headerSortDown span {
+    background: #e6edc1 url(./tablesorter_bkgrd.png) no-repeat 0 2px;
+}
+
+table.grid th span {
+    padding: 4px 0 4px 6px;
+    font-weight: bold;
+}
+
+table.grid a:link,
+table.grid a:visited,
+table.grid a:focus,
+table.grid a:hover {
+    color: #565770;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+table.grid a:hover {
+    color: #d07c57;
+}
+
+table.grid tr.even {
+    background-color: #f0f0f0;
+}
+
+/* expand/collapse */
+table.grid .collapsible {
     padding: 0 0 3px 0;
 }
 
@@ -52,7 +108,7 @@ table.tablesorter .collapsible {
     display: block;
     width: 15px;
     height: 15px;
-    background: url(asc.png) no-repeat 3px 3px;
+    background: url(./tablesorter_expand.png) no-repeat 3px 3px;
     outline: 0;
 }
 
@@ -61,6 +117,6 @@ table.tablesorter .collapsible {
     display: block;
     width: 15px;
     height: 15px;
-    background: url(desc.png) no-repeat -24px 3px;
+    background: url(./tablesorter_expand.png) no-repeat -24px 3px;
     outline: 0;
 }

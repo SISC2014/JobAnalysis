@@ -83,6 +83,9 @@ function totalSummary(data) {
 	}
     }
     sorttable.makeSortable(tableRef);
+    /* $(document).ready(function() {
+	    $(tableRef).dataTable();
+	    }); */
 }
 
 function userTable() {

@@ -34,18 +34,18 @@ function getJobs() {
         });
 }
 
-function dataHandler(data) {
+function dataHandler() {
     $(document).ready(function() {
 	    $('#myTable').DataTable({
-		    "data": data,
+		    "ajax": "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.wsgi?hours=12",
 			"columns": [
 				    { "data": "user" },
-				    { "data": "projects.project" },
-				    { "data": "projects.sites.site" },
-				    { "data": "projects.sites.jobs" },
-				    { "data": "projects.sites.walltime" },
-				    { "data": "projects.sites.cputime" },
-				    { "data": "projects.sites.efficiency" }
+				    { "data": "projects.0.project" },
+				    { "data": "projects.0.sites.0.site" },
+				    { "data": "projects.0.sites.0.jobs" },
+				    { "data": "projects.0.sites.0.walltime" },
+				    { "data": "projects.0.sites.0.cputime" },
+				    { "data": "projects.0.sites.0.efficiency" }
 				    ]
 			});
 	});

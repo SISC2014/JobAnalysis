@@ -3,7 +3,7 @@ $body = $("body");
 
 $(document).on({
         ajaxStart: function() { $body.addClass("loading");    },
-            ajaxStop: function() { $body.removeClass("loading"); }
+        ajaxStop: function() { $body.removeClass("loading"); }
     });
 
 /* The following is javascript for getting data from a wsgi and displaying it correctly */
@@ -15,10 +15,6 @@ function getParameterByName(name) {
         results = regex.exec(location.search);
     return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
-
-// Store data as global var so that multiple functions can access it
-var dataGlobal;
-function dataHandler(data) { dataGlobal = data; }
 
 // Retrieve data from url and execute dataHandler on success
 function getJobs() {
@@ -41,11 +37,16 @@ function getJobs() {
 function cellText(cell, text) {
     var newText = document.createTextNode(text);
     cell.appendChild(newText);
+    
+    if(text == "") {
+	//cell.setAttribute("rowspan", 1);
+	//cell.className += " collapsible";
+    }
 }
 
 function rowText(row, user, project, site, jobs, walltime, cputime, efficiency) {
     //change color -- row.style.backgroundcolor = '#123456';
-    cellText(row.insertCell(0), " ");
+    cellText(row.insertCell(0), "");
     cellText(row.insertCell(1), user);
     cellText(row.insertCell(2), project);
     cellText(row.insertCell(3), site);
@@ -83,6 +84,10 @@ function totalSummary(data) {
 	    //Don't do anything with individual sites (yet) because this is executive summary
 	}
     }
+    var newRow = tbodyRef.insertRow(-1);
+    rowText(newRow, 'u', 'p', 's', 'j', 'w', 'c', 'e');
+    newRow.className += " expand-child";
+
     $(document).ready(function() 
 		      { 
 			  $(tableRef)

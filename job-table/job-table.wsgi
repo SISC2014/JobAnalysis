@@ -37,7 +37,7 @@ def modify_dict(d):
 
         d_list.append(d_user)
 
-    return d_list
+    return { 'data': d_list }
 
 def query_jobs(hours, users):
     resource = '$MATCH_EXP_JOBGLIDEIN_ResourceName'
@@ -129,7 +129,7 @@ def query_jobs(hours, users):
                project_jobs_total += float(access.get('jobs'))
 
            # Get each project total
-           project_data = { 'Project Total': { 'efficiency': "{0:.1f}".format(project_eff_total), 'walltime': "{0:.1f}".format(project_wall_total), 'cputime': "{0:.1f}".format(project_cpu_total), 'jobs': project_jobs_total } }
+           project_data = { 'Total': { 'efficiency': "{0:.1f}".format(project_eff_total), 'walltime': "{0:.1f}".format(project_wall_total), 'cputime': "{0:.1f}".format(project_cpu_total), 'jobs': project_jobs_total } }
 
            user_cache.get(user).get(project).update(project_data)
 
@@ -168,7 +168,7 @@ def application(environ, start_response):
 
     # return jsonp with callback
     response_headers = [('Content-type', 'application/javascript')]
-    response_body = callback + '(' + response_body + ');'
+    #response_body = callback + '(' + response_body + ');'
     start_response(status, response_headers)
 
     return response_body
