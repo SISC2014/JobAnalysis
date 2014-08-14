@@ -46,6 +46,16 @@ function dataHandler() {
     var iTableCounter = 1;
     var oTable, oInnerTable, detailsTableHtml;
 
+    var hours = getParameterByName('hours');
+    var summaryUrl = "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/summary.wsgi?hours=" + hours;
+
+    // Change title and header if title is specified in url
+    var title = getParameterByName('title');
+    if(title != "") {
+	$('title').text(title);
+	$('#headId').text(title);
+    }
+
     $(document).ready(function() {
 	    detailsTableHtml = $('#childTable').html();
 
@@ -66,7 +76,7 @@ function dataHandler() {
 	    // Initialize DataTables with no sorting on the 'details' column (yet)
 	    var oTable = $('#summaryTable').dataTable({
 		    "bJQueryUI": true,
-		    "ajax": "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/summary.wsgi?hours=24",
+		    "ajax": summaryUrl,
 		    "bPaginate": false,
 		    "aoColumns": [
 	                          {
@@ -89,8 +99,9 @@ function dataHandler() {
 	    $(document).on('click', '#summaryTable tbody td img', function () {
 		    var nTr = $(this).parents('tr')[0];
 		    var nTds = this;
-		    // var username = TODO
-		    
+		    var username = oTable.fnGetData(nTr, 7);
+		    var urlAddr = 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/single-user.wsgi?hours=' + hours + ';user=' + username;
+
 		    if(oTable.fnIsOpen(nTr)) {
 			// Close row
 			this.src = "http://i.imgur.com/SD7Dz.png";
@@ -106,7 +117,7 @@ function dataHandler() {
 			oInnerTable = $("#summaryTable_" + iTableCounter).dataTable({
 				"bJQueryUI": true,
 				"bFilter": false,
-				"ajax": 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/single-user.wsgi?hours=24;user=jenkins@login01.osgconnect.net',
+				"ajax": urlAddr,
 				"aoColumns": [
 			                      { "data": "site" },
 			                      { "data": "jobs" },
