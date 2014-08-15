@@ -1,3 +1,26 @@
+//Spinner handler
+$(function() {
+	// Prevent spinner from showing negative numbers
+        var spinner = $("#spinner").spinner({
+		spin: function(event, ui) {
+		    if(ui.value < 0) {
+			$(this).spinner("value", 0);
+			return false;
+		    }
+		}
+	    });
+	
+	// Go button
+	var homeUrl = "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table2.html?";
+	var title = getParameterByName('title');
+	// If title parameter is specified, keep it
+	if(title != "")
+	    title = 'title=' + title + '&'
+
+        $("#go").click(function() {
+		window.location.href = homeUrl + title + 'hours=' + spinner.spinner("value");
+	});
+});
 
 /* The following is javascript for getting data from a wsgi and displaying it correctly */
 

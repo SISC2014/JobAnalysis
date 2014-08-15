@@ -22,26 +22,8 @@
     <!-- CSS file for spinner and other stuff -->
     <link href="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.css" rel="stylesheet">
 
-    <!-- Spinner script -->
+    <!-- Spinner (and other jquery stuff) script -->
     <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
-
-    <script>
-      $(function() {
-        var spinner = $("#spinner").spinner(
-                        {
-                          spin: function(event, ui) {
-                            if(ui.value < 0) {
-                              $(this).spinner("value", 0);
-                              return false;
-                            }
-                          }
-                        });
-          
-        $("#go").click(function() {
-          window.location.href = "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table2.html?hours=" + spinner.spinner("value")
-          });
-      });
-    </script>
 
   </head>
 
