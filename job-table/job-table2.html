@@ -8,6 +8,9 @@
     <!-- JS files for jquery -->
     <script src="jquery-files/jquery-1.11.1.min.js"></script>
 
+    <!-- <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"> -->
+
     <!-- DataTables files -->
     <script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
     <link href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -16,14 +19,41 @@
     <link href="bootstrap-files/bootstrap.min.css" rel="stylesheet">
     <link href="bootstrap-files/bootstrap-theme.min.css" rel="stylesheet">
 
-    <!-- CSS file for loading gif and other stuff -->
+    <!-- CSS file for spinner and other stuff -->
     <link href="http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.css" rel="stylesheet">
+
+    <!-- Spinner script -->
+    <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+
+    <script>
+      $(function() {
+        var spinner = $("#spinner").spinner(
+                        {
+                          spin: function(event, ui) {
+                            if(ui.value < 0) {
+                              $(this).spinner("value", 0);
+                              return false;
+                            }
+                          }
+                        });
+          
+        $("#go").click(function() {
+          window.location.href = "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table2.html?hours=" + spinner.spinner("value")
+          });
+      });
+    </script>
 
   </head>
 
   <body class="container">
 
     <h3 align="center" id="headId">Job Table</h3>
+
+    <p>
+      <label for="spinner">Select a value:</label>
+      <input id="spinner" name="value">
+      <button id="go">Go</button>
+    </p>
 
     <table align="center" class="display" cellspacing="0" width="100%" id="summaryTable" border="0">
       <!-- dynatable: #006A72, darkish blue-green color -->

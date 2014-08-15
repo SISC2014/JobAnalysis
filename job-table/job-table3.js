@@ -1,10 +1,3 @@
-//Displays loading gif anytime ajax event occurs
-/*$body = $("body");
-
-$(document).on({
-        ajaxStart: function() { $body.addClass("loading");    },
-	    ajaxStop: function() { $body.removeClass("loading"); }
-	    }); */
 
 /* The following is javascript for getting data from a wsgi and displaying it correctly */
 
@@ -14,24 +7,6 @@ function getParameterByName(name) {
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
         results = regex.exec(location.search);
     return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-// Retrieve data from url and execute dataHandler on success
-function getJobs() {
-    var hours = getParameterByName('hours');
-
-    // Default is 48 hours
-    if(hours == "")
-        hours = 48;
-
-    var urlAddress = 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table.wsgi?hours='.concat(hours);
-
-    jQuery.ajax({
-            url: urlAddress,
-                dataType: 'jsonp',
-                success: dataHandler,
-                error: function(jqXHR, textStatus, errort){ console.log(textStatus, errort); console.log(jqXHR); }
-        });
 }
 
 // Taken from http://stackoverflow.com/questions/11841486/datatables-drill-down-rows-with-nested-independent-table
