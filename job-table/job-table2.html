@@ -8,9 +8,6 @@
     <!-- JS files for jquery -->
     <script src="jquery-files/jquery-1.11.1.min.js"></script>
 
-    <!-- <script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"> -->
-
     <!-- DataTables files -->
     <script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
     <link href="//cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -32,7 +29,7 @@
     <h3 align="center" id="headId" title="This is the title">Job Table</h3>
 
     <p>
-      <label for="spinner">Select a value:</label>
+      <label for="spinner">Select a time:</label>
       <input id="spinner" name="value">
       <button id="go">Go</button>
     </p>
@@ -41,7 +38,6 @@
       <!-- dynatable: #006A72, darkish blue-green color -->
       <thead>
 	<tr>
-	  <!--<th></th>-->
           <th>User</th>
           <th>Project</th>
           <th>Number of Jobs</th>
@@ -51,8 +47,17 @@
 	  <th>Username</th>
 	  </tr>
       </thead>
-      <tbody>
-      </tbody>
+      <tbody></tbody>
+      <tfoot>
+	<tr>
+	  <th></th>
+	  <th></th>
+	  <th></th>
+	  <th></th>
+	  <th></th>
+	  <th></th>
+	  <th></th>
+      </tfoot>
     </table>
 
     <div style="display:none">
@@ -66,8 +71,7 @@
             <th>CPU Efficiency (%)</th>
 	  </tr>
 	</thead>
-	<tbody>
-	</tbody>
+	<tbody></tbody>
       </table>
     </div>
 

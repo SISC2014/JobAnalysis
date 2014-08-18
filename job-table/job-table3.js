@@ -10,19 +10,17 @@ $(function() {
 		}
 	    });
 	
-	// Go button
 	var homeUrl = "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table2.html?";
 	var title = getParameterByName('title');
 	// If title parameter is specified, keep it
 	if(title != "")
 	    title = 'title=' + title + '&'
 
+	// Go button
         $("#go").click(function() {
 		window.location.href = homeUrl + title + 'hours=' + spinner.spinner("value");
 	});
 });
-
-/* The following is javascript for getting data from a wsgi and displaying it correctly */
 
 // Gets parameters from url address
 function getParameterByName(name) {
@@ -40,6 +38,7 @@ function fnFormatDetails(tableId, html) {
     return sOut;
 }
 
+// Draws table
 function dataHandler() {
     var iTableCounter = 1;
     var oTable, oInnerTable, detailsTableHtml;
@@ -71,7 +70,7 @@ function dataHandler() {
 		    this.insertBefore(nCloneTd.cloneNode(true), this.childNodes[0]);
 		});
 
-	    // Initialize DataTables with no sorting on the 'details' column (yet)
+	    // Initialize DataTables for the 'details' table
 	    var oTable = $('#summaryTable').dataTable({
 		    "bJQueryUI": true,
 		    "ajax": summaryUrl,
@@ -90,9 +89,24 @@ function dataHandler() {
 	                          { "data": "cputime" },
 	                          { "data": "efficiency" },
 	                          { "data": "username", "visible": false } // In order to submit username to wsgi in child
-				 ]
+				 ],
+		    "footerCallback": function ( row, data, start, end, display ) {
+			var api = this.api(), data;
+			
+			for(var i=3;i<6;i++) {
+			    // Total jobs, wall time, and cpu time columns
+			    data = api.column(i).data();
+			    total = data.length ?
+				data.reduce( function (a, b) {
+				    return parseFloat(a) + parseFloat(b);
+				}) :
+				0;
+			    // Update footer
+			    $(api.column(i).footer()).html(Math.round(total));
+			}
+		    }
 		});
-
+	    
 	    // Add listener event for opening and closing details
 	    $(document).on('click', '#summaryTable tbody td img', function () {
 		    var nTr = $(this).parents('tr')[0];
@@ -127,6 +141,7 @@ function dataHandler() {
 			    });
 			iTableCounter = iTableCounter + 1;
 		    } 
-		    });
+		});
 	});
 }
+

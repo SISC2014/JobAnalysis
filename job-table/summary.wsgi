@@ -24,6 +24,7 @@ def query_jobs(hours):
     entries = coll.aggregate([match, group])
 
     ret_list = []
+    missed = 0
 
     for entry in entries['result']:
         # sometimes jobs don't have a project, so entries without a project should be skipped (for now)
@@ -52,9 +53,9 @@ def query_jobs(hours):
             d = { 'username': entry['_id']['user'], 'user': user, 'project': entry['_id']['project'], 'jobs': entry['jobs'], 'walltime': wt, 'cputime': ct, 'efficiency': eff }
             ret_list.append(d)
         except Exception:
-            pass
+            missed += entry['jobs']
 
-    return { 'data': ret_list }
+    return { 'data': ret_list, 'missed': missed }
 
 def application(environ, start_response):
     # parse url parameters
