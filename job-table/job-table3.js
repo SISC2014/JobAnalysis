@@ -136,6 +136,7 @@ function dataHandler() {
 				"aoColumns": [
 			                      { "data": "site" },
 			                      { "data": "jobs" },
+			                      { "data": "percentcompleted" },
 		              	              { "data": "walltime" },
 			                      { "data": "cputime" },
 			                      { "data": "efficiency" }
