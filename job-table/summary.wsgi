@@ -19,7 +19,7 @@ def query_jobs(hours):
     secs_ago = time.time() - hours * 60 * 60
 
     match = { '$match': { 'CompletionDate': { '$gte': secs_ago } } }
-    group = { '$group': { '_id': { 'user': '$User', 'project': '$ProjectName'}, 'walltime': { '$sum': '$RemoteWallClockTime' }, 'cputime': { '$sum': '$RemoteUserCpu' }, 'jobs': { '$sum': 1 } } }
+    group = { '$group': { '_id': { 'user': '$User', 'project': '$ProjectName'}, 'walltime': { '$sum': '$RemoteWallClockTime' }, 'cputime': { '$sum': '$RemoteUserCpu' }, 'jobs': { '$sum': 1 }, 'completed': { '$sum': { '$cond': [ { '$eq': [ "$ExitCode", 0 ] }, 1, 0 ] } } } }
 
     entries = coll.aggregate([match, group])
 
@@ -44,13 +44,17 @@ def query_jobs(hours):
             ct = entry['cputime'] / 60 / 60
             eff = 100 * ct / wt
 
+            # calculate % of completed jobs
+            cp = (entry['completed'] * 100.0) / entry['jobs']
+
             # format numbers to 1 decimal place
             eff = "{0:.1f}".format(eff)
             wt = "{0:.1f}".format(wt)
             ct = "{0:.1f}".format(ct)
+            cp = "{0:.1f}".format(cp)
             
             # include username
-            d = { 'username': entry['_id']['user'], 'user': user, 'project': entry['_id']['project'], 'jobs': entry['jobs'], 'walltime': wt, 'cputime': ct, 'efficiency': eff }
+            d = { 'username': entry['_id']['user'], 'user': user, 'project': entry['_id']['project'], 'jobs': entry['jobs'], 'walltime': wt, 'cputime': ct, 'efficiency': eff, 'percentcompleted': cp }
             ret_list.append(d)
         except Exception:
             missed += entry['jobs']

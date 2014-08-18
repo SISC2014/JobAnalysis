@@ -85,15 +85,18 @@ function dataHandler() {
 	                          { "data": "user" },
 	                          { "data": "project" },
 	                          { "data": "jobs" },
+	                          { "data": "percentcompleted" },
 	                          { "data": "walltime" },
 	                          { "data": "cputime" },
 	                          { "data": "efficiency" },
-	                          { "data": "username", "visible": false } // In order to submit username to wsgi in child
+	                          { "data": "username", "visible": false }, // In order to submit username to wsgi in child
 				 ],
 		    "footerCallback": function ( row, data, start, end, display ) {
 			var api = this.api(), data;
 			
-			for(var i=3;i<6;i++) {
+			for(var i=3;i<7;i++) {
+			    if(i == 4)
+				continue;
 			    // Total jobs, wall time, and cpu time columns
 			    data = api.column(i).data();
 			    total = data.length ?
@@ -111,7 +114,7 @@ function dataHandler() {
 	    $(document).on('click', '#summaryTable tbody td img', function () {
 		    var nTr = $(this).parents('tr')[0];
 		    var nTds = this;
-		    var username = oTable.fnGetData(nTr, 7);
+		    var username = oTable.fnGetData(nTr, 8);
 		    var urlAddr = 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/single-user.wsgi?hours=' + hours + ';user=' + username;
 
 		    if(oTable.fnIsOpen(nTr)) {
