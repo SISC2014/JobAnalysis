@@ -1,3 +1,24 @@
+function splitquery(url) {
+	var offset = url.indexOf('?');
+	if (offset == -1)
+		return [url, '']
+	left = url.substr(0, offset);
+	right = url.substr(offset);
+	return [left, right];
+}
+
+function splitpath(path) {
+	var offset = path.lastIndexOf('/');
+	if (offset == -1)
+		return [path, ''];
+	return [path.substr(0, offset+1), path.substr(offset)];
+}
+
+var tmp = splitquery('' + window.location.href);
+var homeURL = tmp[0] + '?';
+var tmp = splitpath(homeURL)
+var baseURL = tmp[0];
+
 //Spinner handler
 $(function() {
 	// Prevent spinner from showing negative numbers
@@ -9,8 +30,7 @@ $(function() {
 		    }
 		}
 	    });
-	
-	var homeUrl = "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/job-table2.html?";
+
 	var title = getParameterByName('title');
 	// If title parameter is specified, keep it
 	if(title != "")
@@ -44,7 +64,7 @@ function dataHandler() {
     var oTable, oInnerTable, detailsTableHtml;
 
     var hours = getParameterByName('hours');
-    var summaryUrl = "http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/summary.wsgi?hours=" + hours;
+    var summaryUrl = baseURL + "summary.wsgi?hours=" + hours;
 
     // Change title and header if title is specified in url
     var title = getParameterByName('title');
@@ -115,7 +135,7 @@ function dataHandler() {
 		    var nTr = $(this).parents('tr')[0];
 		    var nTds = this;
 		    var username = oTable.fnGetData(nTr, 8);
-		    var urlAddr = 'http://web-dev.ci-connect.net/~erikhalperin/JobAnalysis/job-table/single-user.wsgi?hours=' + hours + ';user=' + username;
+		    var urlAddr = baseURL + 'single-user.wsgi?hours=' + hours + ';user=' + username;
 
 		    if(oTable.fnIsOpen(nTr)) {
 			// Close row
