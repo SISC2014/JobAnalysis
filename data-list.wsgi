@@ -6,7 +6,7 @@ import re # for character removal from strings
 from pymongo import MongoClient # connect to mongodb
 import json # output json document
 import time # timestamps
-import shelve # ca-ching $$$
+import redis # ca-ching $$$
 
 import pwd # mapping username to real name from OSG database
 # ***Accessing OSG database (for usernames) requires the program to run on OSG***
@@ -18,7 +18,6 @@ coll = db.history_records
 
 def query_data():
     resource = 'MATCH_EXP_JOBGLIDEIN_ResourceName'
-    # secs_ago = time.time() - hours * 60 * 60
 
     # should probs add parallel execution
     sites = coll.distinct(resource)
@@ -26,52 +25,64 @@ def query_data():
     projects = coll.distinct('ProjectName')
 
     # convert username to user's name
-    for index, user in enumerate(users):
+    '''for index, user in enumerate(users):
         try:
             name = user.split('@', 1)[0]
             name = pwd.getpwnam(name)
             users[index] = name.pw_gecos
         except Exception:
             pass
+    '''
 
     return { 'users': users, 'projects': projects, 'sites': sites }
 
-
+# TODO - add hours
 def application(environ, start_response):
     # parsing query strings
     d = parse_qs(environ['QUERY_STRING'])
     callback = d.get('callback', [''])[0]
-    user = d.get('user', [''])[0]
-    project = d.get('project', [''])[0]
 
     timestamp = time.time()
-    l = []
 
-    '''
-    # access shelve db
-    db = shelve.open('data.db')
-    # only fails on first case
-    try:
-        # retrun data from shelve
-        if db['ts'] => timestamp - 60 * 30:
-            # iterate through each site
-            for index, site in enumerate(db['sites']):
-                entry = [index]
+    # initialize redis
+    r_server = redis.Redis('db.mwt2.org')
 
-        # query mongo
-        else:
-            m_data = query_data()
-            # update users
+    users = r_server.lrange('users2', 0, -1)
+    projs = r_server.lrange('projects', 0, -1)
+    sites = r_server.lrange('sites', 0, -1)
 
-    try:
-        s = shelve.open('test')
-        s.close()
-    except Exception, e:
-        response_body = str(e)
-    '''
-     
+    # return data from redis
+    if(r_server.get('ts') >= timestamp - 60*30):
+        response_body = json.dumps( { 'users': users, 'projects': projs, 'sites': sites }, indent=2)
+
+    # query mongo
+    else:        
+        r_server.set('ts', timestamp)
+        data = query_data()
+        
+        # get users, projs, and sites not already in cache
+        new_users = [item for item in data['users'] if item not in users]
+        new_projs = [item for item in data['projects'] if item not in projs]
+        new_sites = [item for item in data['sites'] if item not in sites]
+        
+        # update redis
+        for user in new_users:
+            r_server.rpush('users2', user)
+
+        for proj in new_projs:
+            r_server.rpush('projects', proj)
+
+        for site in new_sites:
+            r_server.rpush('sites', site)
+        
+        users = r_server.lrange('users2', 0, -1)
+        projs = r_server.lrange('projects', 0, -1)
+        sites = r_server.lrange('sites', 0, -1)
+
+        response_body = json.dumps( { 'users': users, 'projects': projs, 'sites': sites }, indent=2)
+
     status = '200 OK'
-    response_body = json.dumps(query_data(), indent=2)
+
     response_headers = [('Content-type', 'application/javascript')]
     response_body = callback + '(' + response_body + ');'
     start_response(status, response_headers)
