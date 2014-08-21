@@ -22,19 +22,31 @@ def get_index(group, item):
     try:
         index = r_server.lrange(group, 0, -1).index(item)
     except Exception:
-        r_server.rpush(group, item)
-        index = r_server.lrange(group, 0, -1).index(item)
+        index = -1
 
     return index
 
 def job_count(hours, user, proj, site, bin):
     resource = 'MATCH_EXP_JOBGLIDEIN_ResourceName'
     resource2 = '$' + resource
-    secs_ago = time.time() - hours * 60 * 60
+
+    secs_ago =  time.time() - hours * 60 * 60
 
     entry_list = []
 
-    match = { '$match': { 'CompletionDate': { '$gte': secs_ago }, 'User': user } }
+    match = { 'CompletionDate': { '$gte': secs_ago } }
+
+    # if user/project/site isn't specified use each user/project/site
+    if(user != ""):
+        match.update( { 'User': user } )
+
+    if(proj != ""):
+        match.update( { 'ProjectName': proj } )
+
+    if(site != ""):
+        match.update( { resource: site } )
+
+    match = { '$match': match }
     group = { '$group': { '_id': { 'time': '$CompletionDate', 'user': '$User', 'project': '$ProjectName', 'site': resource2 }, 'jobs': { '$sum': 1 } } }
 
     entries = coll.aggregate([match, group])
@@ -42,6 +54,7 @@ def job_count(hours, user, proj, site, bin):
     # sort entries into bin groups
     bin_s = bin * 60
     for entry in entries['result']:
+        # if the entry doesn't have a project, user, or site, then discard them
         try:
             project = entry['_id']['project']
             user = entry['_id']['user']
@@ -87,15 +100,15 @@ def application(environ, start_response):
     user = d.get('user', [''])[0]
     project = d.get('project', [''])[0]
     site = d.get('site', [''])[0]
-    bin = d.get('bin', [''])[0]
-    hours = d.get('hours', [''])[0]
+    bin = int(d.get('bin', [''])[0])
+    hours = int(d.get('hours', [''])[0])
 
     curr_time = time.time()
     entry_list = []
 
     status = '200 OK'
 
-    response_body = json.dumps(job_count(hours, user, project, 'MWT2', bin), indent=2)
+    response_body = json.dumps(job_count(hours, user, project, site, bin), indent=2)
 
     response_headers = [('Content-type', 'application/javascript')]
     response_body = callback + '(' + response_body + ');'

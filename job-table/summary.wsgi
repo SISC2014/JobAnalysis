@@ -59,7 +59,7 @@ def query_jobs(hours):
         except Exception:
             missed += entry['jobs']
 
-    return { 'data': ret_list, 'missed': missed }
+    return { 'data': ret_list, 'missed jobs': missed }
 
 def application(environ, start_response):
     # parse url parameters
