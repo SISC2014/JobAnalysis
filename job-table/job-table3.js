@@ -14,9 +14,10 @@ function splitpath(path) {
 	return [path.substr(0, offset+1), path.substr(offset)];
 }
 
+
 var tmp = splitquery('' + window.location.href);
 var homeURL = tmp[0] + '?';
-var tmp = splitpath(homeURL)
+var tmp = splitpath(homeURL);
 var baseURL = tmp[0];
 
 //Spinner handler
@@ -38,7 +39,7 @@ $(function() {
 
 	// Go button
         $("#go").click(function() {
-		window.location.href = homeUrl + title + 'hours=' + spinner.spinner("value");
+		window.location.href = homeURL + title + 'hours=' + spinner.spinner("value");
 	});
 });
 
