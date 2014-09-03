@@ -74,9 +74,6 @@ function dataHandler() {
 	$('#headId').text(title);
     }
 
-    // Limit to a single search key?
-    var autosearch = getParameterByName('search');
-
     $(document).ready(function() {
 	    detailsTableHtml = $('#childTable').html();
 
@@ -170,12 +167,6 @@ function dataHandler() {
 			iTableCounter = iTableCounter + 1;
 		    } 
 		});
-
-        // populate the search
-        if (autosearch) {
-            $('#summaryTable_filter label input').val(autosearch);
-            $('#summaryTable_filter label input').keyup();
-         }
 	});
 }
 
