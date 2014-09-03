@@ -34,7 +34,7 @@ $(function() {
 
 	var title = getParameterByName('title');
 	// If title parameter is specified, keep it
-	if(title != "")
+	if (title != null)
 	    title = 'title=' + title + '&'
 
 	// Go button
@@ -46,9 +46,11 @@ $(function() {
 // Gets parameters from url address
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+    var results = regex.exec(location.search);
+    if (results == null)
+        return null;
+    return decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
 // Taken from http://stackoverflow.com/questions/11841486/datatables-drill-down-rows-with-nested-independent-table
@@ -64,15 +66,8 @@ function dataHandler() {
     var iTableCounter = 1;
     var oTable, oInnerTable, detailsTableHtml;
 
-    var hours = getParameterByName('hours');
+    var hours = getParameterByName('hours') || "";
     var summaryUrl = baseURL + "summary.wsgi?hours=" + hours;
-
-    // Change title and header if title is specified in url
-    var title = getParameterByName('title');
-    if(title != "") {
-	$('title').text(title);
-	$('#headId').text(title);
-    }
 
     // Limit to a single search key?
     var autosearch = getParameterByName('search');
@@ -179,3 +174,16 @@ function dataHandler() {
 	});
 }
 
+
+// Change title and header if title is specified in url
+var title = getParameterByName('title');
+if (title != null) {
+    $('title').text(title);
+    $('#pagetitle').text(title);
+}
+
+// Hide table header?
+var decor = getParameterByName('decoration');
+if (decor == 'plain') {
+    $('.table_header').hide();
+}
