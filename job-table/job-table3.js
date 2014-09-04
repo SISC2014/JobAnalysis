@@ -67,7 +67,8 @@ function dataHandler() {
     var oTable, oInnerTable, detailsTableHtml;
 
     var hours = getParameterByName('hours') || "";
-    var summaryUrl = baseURL + "summary.wsgi?hours=" + hours;
+    var site = getParameterByName('site') || "";
+    var summaryUrl = baseURL + "summary.wsgi?hours=" + hours + '&site=' + site;
 
     // Limit to a single search key?
     var autosearch = getParameterByName('search');

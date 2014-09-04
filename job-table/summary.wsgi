@@ -12,10 +12,12 @@ import pwd # mapping username to real name from OSG database
 
 # connect to database
 client = MongoClient('db.mwt2.org', 27017)
-db = client.condor_history
-coll = db.history_records
 
-def query_jobs(hours):
+def query_jobs(hours, site=None):
+    if site == '' or site is None:
+        site = 'osg'
+    db = getattr(client, 'condor_history_' + site)
+    coll = db.history_records
     secs_ago = time.time() - hours * 60 * 60
 
     match = { '$match': { 'CompletionDate': { '$gte': secs_ago } } }
@@ -65,10 +67,11 @@ def application(environ, start_response):
     # parse url parameters
     d = parse_qs(environ['QUERY_STRING'])
     hours = int(d.get('hours', [''])[0])
+    site = d.get('site', [''])[0]
 
     status = '200 OK'
 
-    response_body = json.dumps(query_jobs(hours), indent=2)
+    response_body = json.dumps(query_jobs(hours, site=site), indent=2)
 
     # return jsonp with callback
     response_headers = [('Content-type', 'application/javascript')]
